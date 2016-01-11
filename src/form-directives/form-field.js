@@ -22,6 +22,9 @@
                 layoutCss               : '@?',
                 tel                     : '=?',
                 showLabel               : '=?',
+                showHelpText            : '=?', //boolean - optional
+                showToolTip             : '=?',
+                helpText                : '@?',
                 errorLayoutCss          : '@?',
                 hideValidationMessage   : '=?',  //default is false
                 validationFieldName     : '@?',  //to override the default field   '[validationFieldName]' is required
@@ -34,6 +37,8 @@
             },
             link: function($scope, element, attrs, form){
                 $scope.showLabel = $scope.showLabel !== false; // default to true
+                $scope.showHelpText = $scope.showHelpText || false;
+                $scope.showToolTip = $scope.showToolTip || false;
                 $scope.hideValidationMessage = $scope.hideValidationMessage || false;
                 $scope.layoutCss = $scope.layoutCss || "col-md-12";
                 $scope.errorLayoutCss = $scope.errorLayoutCss || "col-md-12";

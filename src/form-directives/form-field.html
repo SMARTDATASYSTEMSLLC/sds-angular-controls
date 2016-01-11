@@ -3,13 +3,21 @@
          <div class='form-group clearfix' ng-class="{ 'has-error': showError() }">
 
         <div class="{{layoutCss}}">
-            <label ng-if="showLabel" class='control-label {{labelCss}}'> {{ label || (field | labelCase) }} <span ng-if='isRequired && !isReadonly'>*</span></label>
+            <label ng-if="showLabel" class='control-label {{labelCss}}'>
+                {{ label || (field | labelCase) }}
+                <span ng-if='isRequired && !isReadonly'>*</span>
+                <span ng-if="showToolTip"><a href="#" uib-popover="{{helpText}}" popover-trigger="mouseenter"><i class="fa fa-question-circle"></i></a></span>
+                <!--<span ng-if="showToolTip" uib-popover="{{helpText}}" popover-trigger="mouseenter"><i class="fa fa-question-circle"></i></span>-->
+            </label>
 
             <div ng-if="!valueFormatter || !isReadonly"><ng-transclude></ng-transclude></div>
             <input ng-if="valueFormatter && isReadonly" class="form-control" type="text" ng-value="valueFormatter()" name="{{field}}" readonly="readonly" />
 
             <!-- validation -->
             <div class="pull-left" ng-include="'sds-angular-controls/form-directives/form-field-validation.html'"></div>
+            <div ng-if="showHelpText && !showToolTip">
+                <i>{{helpText}}</i>
+            </div>
         </div>
          </div>
     </div>
