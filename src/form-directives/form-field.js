@@ -20,10 +20,15 @@
                 layout                  : '@?',
                 labelCss                : '@?',
                 layoutCss               : '@?',
+                tel                     : '=?',
                 showLabel               : '=?',
+                showHelpText            : '=?', //boolean - optional
+                showToolTip             : '=?',
+                helpText                : '@?',
                 errorLayoutCss          : '@?',
                 hideValidationMessage   : '=?',  //default is false
-                validationFieldName     : '@?'  //to override the default label   '[validationFieldName]' is required
+                validationFieldName     : '@?',  //to override the default field   '[validationFieldName]' is required
+                validationFieldLabel    : '@?'  //to override the default validation label - you can use label
             },
             templateUrl: 'sds-angular-controls/form-directives/form-field.html',
             require: '^form',
@@ -32,9 +37,13 @@
             },
             link: function($scope, element, attrs, form){
                 $scope.showLabel = $scope.showLabel !== false; // default to true
+                $scope.showHelpText = $scope.showHelpText || false;
+                $scope.showToolTip = $scope.showToolTip || false;
                 $scope.hideValidationMessage = $scope.hideValidationMessage || false;
                 $scope.layoutCss = $scope.layoutCss || "col-md-12";
                 $scope.errorLayoutCss = $scope.errorLayoutCss || "col-md-12";
+
+
 
                 $scope.layout = $scope.layout || "stacked";
                 if($scope.layout === "horizontal"){
@@ -43,10 +52,8 @@
 
                 element.on('focus', '[name]', function (){
                     $scope.isFocused = true;
-                    $scope.$apply();
                 }).on('blur', '[name]', function (){
                     $scope.isFocused = false;
-                    $scope.$apply();
                 });
 
                 //validation ie. on submit

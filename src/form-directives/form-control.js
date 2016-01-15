@@ -1,15 +1,35 @@
 
 (function () {
     'use strict';
-    function formControl ($injector, $compile, formControlFormatters) {
+    function formControl ($injector, $compile, formControlFormatters, _) {
         return{
             restrict: 'A',
             terminal: true,
             priority: 1000,
             require: ['^formField'],
             link:  function ($scope, $element, $attrs, containers) {
-                var formField = containers[0];
-                var name = $attrs.name || $attrs.ngModel.substr($attrs.ngModel.lastIndexOf('.')+1);
+                var formField = containers[0], name;
+
+                if(!$element.attr('maxLength')) {
+                    if ($element.is("input")) {
+                        $element.attr('maxLength', 255);
+                    }
+
+                    if ($element.is("textarea")) {
+                        $element.attr('maxLength', 5000);
+                    }
+                }
+
+                if (formField.$scope.validationFieldName){
+                    name = formField.$scope.validationFieldName;
+                } else {
+                    name = $attrs.name || ($attrs.ngModel && $attrs.ngModel.substr($attrs.ngModel.lastIndexOf('.')+1)) || ($attrs.sdsModel && $attrs.sdsModel.substr($attrs.sdsModel.lastIndexOf('.')+1));
+                }
+
+                if(!name){
+                    alert('control must have a name via validationFieldName or model(ng/sds)');
+                }
+
                 $element.attr('name', name);
                 $element.attr('ng-required', $attrs.ngRequired || '{{container.isRequired}}');
                 $element.removeAttr('form-control');
@@ -20,6 +40,13 @@
                 }
 
                 $scope.container = formField.$scope;
+
+                formField.$scope.tel = false;
+
+                if($element.attr('type') === 'tel'){
+                    formField.$scope.tel = true;
+                    $element.attr('ng-pattern', /^\(?[0-9]{3}(\-|\)) ?[0-9]{3}-[0-9]{4}$/);
+                }
 
                 formField.$scope.field = name;
                 if ($attrs.min){

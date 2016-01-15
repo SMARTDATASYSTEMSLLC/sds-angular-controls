@@ -1,20 +1,22 @@
 <div ng-if="!hideValidationMessage" class='has-error' ng-show='showError()'
      ng-messages='getError()'>
-    <span class='control-label' ng-message='required'> {{ validationFieldName || label || (field | labelCase) }} is required. </span>
-    <span class='control-label' ng-message='text'>     {{ validationFieldName || label || (field | labelCase) }} should be text. </span>
-    <span class='control-label' ng-message='integer'>  {{ validationFieldName || label || (field | labelCase) }} should be an integer. </span>
-    <span class='control-label' ng-message='email'>    {{ validationFieldName || label || (field | labelCase) }} should be an email address. </span>
-    <span class='control-label' ng-message='date'>     {{ validationFieldName || label || (field | labelCase) }} should be a date. </span>
-    <span class='control-label' ng-message='datetime'> {{ validationFieldName || label || (field | labelCase) }} should be a datetime. </span>
-    <span class='control-label' ng-message='time'>     {{ validationFieldName || label || (field | labelCase) }} should be a time. </span>
-    <span class='control-label' ng-message='month'>    {{ validationFieldName || label || (field | labelCase) }} should be a month. </span>
-    <span class='control-label' ng-message='week'>     {{ validationFieldName || label || (field | labelCase) }} should be a week. </span>
-    <span class='control-label' ng-message='url'>      {{ validationFieldName || label || (field | labelCase) }} should be an url. </span>
-    <span class='control-label' ng-message='zip'>      {{ validationFieldName || label || (field | labelCase) }} should be a valid zipcode. </span>
-    <span class='control-label' ng-message='number'>   {{ validationFieldName || label || (field | labelCase) }} must be a number</span>
-    <span class='control-label' ng-message='tel'>      {{ validationFieldName || label || (field | labelCase) }} must be a phone number</span>
-    <span class='control-label' ng-message='color'>    {{ validationFieldName || label || (field | labelCase) }} must be a color</span>
-    <span class='control-label' ng-message='min'>      {{ validationFieldName || label || (field | labelCase) }} must be at least {{min}}. </span>
-    <span class='control-label' ng-message='max'>      {{ validationFieldName || label || (field | labelCase) }} must not exceed {{max}} </span>
-    <span class='control-label' ng-repeat='(k, v) in types' ng-message='{{k}}'> {{ validationFieldName || label || (field | labelCase) }}{{v[1]}}</span>
+    <span class='control-label' ng-message='required'> {{ validationFieldLabel || label || (field | labelCase) }} is required. </span>
+    <span class='control-label' ng-message='text'>     {{ validationFieldLabel || label || (field | labelCase) }} should be text. </span>
+    <span class='control-label' ng-message='integer'>  {{ validationFieldLabel || label || (field | labelCase) }} should be an integer. </span>
+    <span class='control-label' ng-message='email'>    {{ validationFieldLabel || label || (field | labelCase) }} should be an email address. </span>
+    <span class='control-label' ng-message='date'>     {{ validationFieldLabel || label || (field | labelCase) }} should be a date. </span>
+    <span class='control-label' ng-message='datetime'> {{ validationFieldLabel || label || (field | labelCase) }} should be a datetime. </span>
+    <span class='control-label' ng-message='time'>     {{ validationFieldLabel || label || (field | labelCase) }} should be a time. </span>
+    <span class='control-label' ng-message='month'>    {{ validationFieldLabel || label || (field | labelCase) }} should be a month. </span>
+    <span class='control-label' ng-message='week'>     {{ validationFieldLabel || label || (field | labelCase) }} should be a week. </span>
+    <span class='control-label' ng-message='url'>      {{ validationFieldLabel || label || (field | labelCase) }} should be an url. </span>
+    <span class='control-label' ng-message='zip'>      {{ validationFieldLabel || label || (field | labelCase) }} should be a valid zipcode. </span>
+    <span class='control-label' ng-message='number'>   {{ validationFieldLabel || label || (field | labelCase) }} must be a number</span>
+    <span class='control-label' ng-message='tel'>      {{ validationFieldLabel || label || (field | labelCase) }} must be a phone number</span>
+    <span ng-if="tel === true" class='control-label' ng-message='pattern'>  {{ validationFieldLabel || label || (field | labelCase) }} must be a phone number (xxx-xxx-xxxx or (xxx) xxx-xxxx) : {{tel}}</span>
+    <span class='control-label' ng-message='color'>    {{ validationFieldLabel || label || (field | labelCase) }} must be a color</span>
+    <span class='control-label' ng-message='min'>      {{ validationFieldLabel || label || (field | labelCase) }} must be at least {{min}}. </span>
+    <span class='control-label' ng-message='max'>      {{ validationFieldLabel || label || (field | labelCase) }} must not exceed {{max}} </span>
+    <span class='control-label' ng-message='taMaxText'>      {{ validationFieldLabel || label || (field | labelCase) }} must not exceed {{max}} </span>
+    <span class='control-label' ng-repeat='(k, v) in types' ng-message='{{k}}'> {{ validationFieldLabel || label || (field | labelCase) }}{{v[1]}}</span>
 </div>

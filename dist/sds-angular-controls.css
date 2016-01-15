@@ -1,7 +1,7 @@
 /*! 
  * sds-angular-controls
  * Angular Directives used with sds-angular generator
- * @version 1.0.1 
+ * @version 1.2.6 
  * 
  * Copyright (c) 2016 Steve Gentile, David Benson 
  * @link https://github.com/SMARTDATASYSTEMSLLC/sds-angular-controls 
@@ -14,6 +14,10 @@
 .text-toggle .toggle-switch {
   display: inline-block;
   vertical-align: top;
+}
+.help-text {
+  color: #999;
+  font-size: 12px;
 }
 .datepicker.timepicker .input-group {
   width: 40%;

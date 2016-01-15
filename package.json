@@ -1,7 +1,8 @@
 {
   "name": "sds-angular-controls",
-  "version": "1.0.1",
+  "version": "1.3.2",
   "homepage": "https://github.com/SMARTDATASYSTEMSLLC/sds-angular-controls",
+  "main": "index.js",
   "authors": [
     {
       "name": "Steve Gentile",
@@ -40,5 +41,16 @@
   ],
   "pre-push": [
     "grunt"
-  ]
+  ],
+  "dependencies": {
+    "angular": "^1.4.8",
+    "angular-messages": ">=1.3 <2.0",
+    "angular-sanitize": ">=1.3 <2.0",
+    "angular-ui-bootstrap": "^0.14.3",
+    "block-ui": "^2.70.1",
+    "bootstrap": "^3.3.5",
+    "jquery": "^2.1.4",
+    "lodash": "^3.10.1",
+    "moment": "^2.10.6"
+  }
 }

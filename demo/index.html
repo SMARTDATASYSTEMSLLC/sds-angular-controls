@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="../bower_components/angular-toggle-switch/angular-toggle-switch.css" type="text/css">
     <link rel="stylesheet" href="../bower_components/selectize/dist/css/selectize.css" type="text/css">
     <link rel="stylesheet" href="../bower_components/selectize/dist/css/selectize.bootstrap3.css" type="text/css">
-  <link rel="stylesheet" href="../bower_components/angular-toggle-switch/angular-toggle-switch-bootstrap.css" type="text/css">
   <link rel="stylesheet" href="../dist/sds-angular-controls.css" type="text/css">
 </head>
 <body>
@@ -59,13 +58,14 @@
 
           <form-field is-readonly="true">
               <form-date-picker sds-model="vm.testForm.DateOfBirth" date-format="MM/dd/yyyy"></form-date-picker>
-              <timepicker ng-model="vm.testForm.DateOfBirth" minute-step="1"></timepicker>
+              <!--<timepicker ng-model="vm.testForm.DateOfBirth" minute-step="1"></timepicker>-->
           </form-field>
 
           <form-field>
-              <form-date-picker sds-model="vm.testForm.DateOfBirth" date-format="MM/dd/yyyy"></form-date-picker>
+              <!--<form-date-picker sds-model="vm.testForm.DateOfBirth" date-format="MM/dd/yyyy"></form-date-picker>-->
               <timepicker ng-model="vm.testForm.DateOfBirth" minute-step="1"></timepicker>
           </form-field>
+          <input type="submit" value="Submit" class="btn btn-primary">
       </form>
 
         <hr>
@@ -119,7 +119,7 @@
                 <timepicker ng-model="vm.testForm.DateOfBirth" minute-step="1"></timepicker>
             </form-field>
 
-            <input type="submit" value="Submit" class="btn btn-primary" ng-disabled="testHorizontalFrm.$invalid">
+            <input type="submit" value="Submit" class="btn btn-primary">
         </form>
         <hr>
         {{vm.testForm | json}}

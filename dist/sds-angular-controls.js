@@ -1,13 +1,15 @@
 /*! 
  * sds-angular-controls
  * Angular Directives used with sds-angular generator
- * @version 1.0.1 
+ * @version 1.2.6 
  * 
  * Copyright (c) 2016 Steve Gentile, David Benson 
  * @link https://github.com/SMARTDATASYSTEMSLLC/sds-angular-controls 
  * @license  MIT 
  */ 
-angular.module('sds-angular-controls', ['ui.bootstrap', 'toggle-switch', 'ngSanitize', 'ngMessages', 'selectize-ng', 'currencyMask']);
+angular.module('sds-angular-controls', ['ui.bootstrap', 'ngSanitize', 'currencyMask'])
+    .constant('_', window._)
+    .constant('moment', window.moment);
 
 (function (){
   'use strict';
@@ -119,15 +121,35 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'toggle-switch', 'ngSani
 
 (function () {
     'use strict';
-    function formControl ($injector, $compile, formControlFormatters) {
+    function formControl ($injector, $compile, formControlFormatters, _) {
         return{
             restrict: 'A',
             terminal: true,
             priority: 1000,
             require: ['^formField'],
             link:  function ($scope, $element, $attrs, containers) {
-                var formField = containers[0];
-                var name = $attrs.name || $attrs.ngModel.substr($attrs.ngModel.lastIndexOf('.')+1);
+                var formField = containers[0], name;
+
+                if(!$element.attr('maxLength')) {
+                    if ($element.is("input")) {
+                        $element.attr('maxLength', 255);
+                    }
+
+                    if ($element.is("textarea")) {
+                        $element.attr('maxLength', 5000);
+                    }
+                }
+
+                if (formField.$scope.validationFieldName){
+                    name = formField.$scope.validationFieldName;
+                } else {
+                    name = $attrs.name || ($attrs.ngModel && $attrs.ngModel.substr($attrs.ngModel.lastIndexOf('.')+1)) || ($attrs.sdsModel && $attrs.sdsModel.substr($attrs.sdsModel.lastIndexOf('.')+1));
+                }
+
+                if(!name){
+                    alert('control must have a name via validationFieldName or model(ng/sds)');
+                }
+
                 $element.attr('name', name);
                 $element.attr('ng-required', $attrs.ngRequired || '{{container.isRequired}}');
                 $element.removeAttr('form-control');
@@ -138,6 +160,13 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'toggle-switch', 'ngSani
                 }
 
                 $scope.container = formField.$scope;
+
+                formField.$scope.tel = false;
+
+                if($element.attr('type') === 'tel'){
+                    formField.$scope.tel = true;
+                    $element.attr('ng-pattern', /^\(?[0-9]{3}(\-|\)) ?[0-9]{3}-[0-9]{4}$/);
+                }
 
                 formField.$scope.field = name;
                 if ($attrs.min){
@@ -168,7 +197,7 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'toggle-switch', 'ngSani
             }
         }
     }
-    formControl.$inject = ["$injector", "$compile", "formControlFormatters"];
+    formControl.$inject = ["$injector", "$compile", "formControlFormatters", "_"];
 
     var formControlFormatters = {
         'select[ng-options]': function (ngModel, $attrs, $parse, $scope){
@@ -297,10 +326,15 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'toggle-switch', 'ngSani
                 layout                  : '@?',
                 labelCss                : '@?',
                 layoutCss               : '@?',
+                tel                     : '=?',
                 showLabel               : '=?',
+                showHelpText            : '=?', //boolean - optional
+                showToolTip             : '=?',
+                helpText                : '@?',
                 errorLayoutCss          : '@?',
                 hideValidationMessage   : '=?',  //default is false
-                validationFieldName     : '@?'  //to override the default label   '[validationFieldName]' is required
+                validationFieldName     : '@?',  //to override the default field   '[validationFieldName]' is required
+                validationFieldLabel    : '@?'  //to override the default validation label - you can use label
             },
             templateUrl: 'sds-angular-controls/form-directives/form-field.html',
             require: '^form',
@@ -309,9 +343,13 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'toggle-switch', 'ngSani
             }],
             link: function($scope, element, attrs, form){
                 $scope.showLabel = $scope.showLabel !== false; // default to true
+                $scope.showHelpText = $scope.showHelpText || false;
+                $scope.showToolTip = $scope.showToolTip || false;
                 $scope.hideValidationMessage = $scope.hideValidationMessage || false;
                 $scope.layoutCss = $scope.layoutCss || "col-md-12";
                 $scope.errorLayoutCss = $scope.errorLayoutCss || "col-md-12";
+
+
 
                 $scope.layout = $scope.layout || "stacked";
                 if($scope.layout === "horizontal"){
@@ -320,10 +358,8 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'toggle-switch', 'ngSani
 
                 element.on('focus', '[name]', function (){
                     $scope.isFocused = true;
-                    $scope.$apply();
                 }).on('blur', '[name]', function (){
                     $scope.isFocused = false;
-                    $scope.$apply();
                 });
 
                 //validation ie. on submit
@@ -346,6 +382,167 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'toggle-switch', 'ngSani
     angular.module('sds-angular-controls').directive('formField', formField);
 })();
 
+(function () {
+    'use strict';
+
+    function UnsavedConfirmationModalCtrl($scope) {
+
+    }
+    UnsavedConfirmationModalCtrl.$inject = ["$scope"];
+
+    angular.module('sds-angular-controls').controller('UnsavedConfirmationModalCtrl',UnsavedConfirmationModalCtrl);
+})();
+(function(){
+    'use strict';
+    function formUnsaved ($rootScope, $location, $modal, progressLoader) {
+        return {
+            restrict: 'A',
+            require: '^form',
+            link: function($scope, element, attrs, form){
+
+                //element.on("submit", function(event) {
+                //    if (form && form.$valid) {
+                //        progressLoader.start();
+                //    }
+                //});
+
+
+                function routeChange(event) {
+                    if(form.$dirty){
+                        //var confirm = $window.confirm('You have unsaved changes');
+                        //if(!confirm) {
+                        progressLoader.endAll();
+                        event.preventDefault();
+                        //}
+                        var targetPath = $location.path();
+
+                        $modal.open({
+                            templateUrl: 'sds-angular-controls/form-directives/form-unsaved-modal.html',
+                            scope: $scope
+                        }).result.then(function(result){
+                            if(result === 'CONTINUE'){
+                                form.$setPristine();
+                                $location.path(targetPath);
+                            }
+                        });
+                    }
+                }
+
+                $scope.$on('$routeChangeStart', routeChange);
+            }
+        }
+    }
+    formUnsaved.$inject = ["$rootScope", "$location", "$modal", "progressLoader"];
+
+    angular.module('sds-angular-controls').directive('formUnsaved', formUnsaved);
+})();
+(function (){
+    'use strict';
+
+    function progressLoader($timeout, $window, $q, $rootScope, $location) {
+        var active = 0;
+        var notice = null;
+
+        return {
+            wait: function (promise, isBlocking){
+                if (isBlocking){
+                    this.start();
+                }
+
+                return promise.then(this.end, function (arg){
+                    return $q.reject(this.end(arg));
+                });
+            },
+            start: function (arg) {
+                if ( ++active < 2) {
+                    var settings = {
+                        message: '<i class="fa fa-spinner fa-spin"></i>',
+                        //baseZ:1500,
+                        baseZ: 9999,
+                        ignoreIfBlocked: true,
+                        css: {
+                            border: 'none',
+                            padding: '15px',
+                            backgroundColor: '#000',
+                            '-webkit-border-radius': '10px',
+                            '-moz-border-radius': '10px',
+                            opacity: 0.5,
+                            color: '#fff',
+                            width: '144px',
+                            'font-size': '72px',
+                            left:'50%',
+                            'margin-left': '-50px'
+                        }
+                    };
+                    angular.extend(settings, arg);
+                    $.blockUI(settings);
+                }
+                return arg;
+            },
+            end: function (arg) {
+                if (--active < 1) {
+                    if (notice){
+                        notice.update({
+                            delay: 0,
+                            hide: true
+                        });
+                    }
+                    $.unblockUI();
+                    active = 0;
+                }
+                return arg;
+            },
+            endAll: function(arg){
+                if (notice){
+                    notice.update({
+                        delay: 0,
+                        hide: true
+                    });
+                }
+                $.unblockUI();
+                active = 0;
+                return arg;
+            },
+            attachToRoute: function(title) {
+                var self = this;
+                self.lastUrl = $location.path();
+
+                $rootScope.$on('$routeChangeStart', function (event, current) {
+                    //this is needed because
+                    //1. on $route.reload no 'success' is fired and the spinner never stops
+                    //2. clicking, ie. a node menu again, behaves the same as a route reload
+                    if (self.lastUrl !== $location.path()) {
+                        self.start();
+                    }
+
+                    self.lastUrl = $location.path();
+                });
+
+                $rootScope.$on('$routeChangeSuccess', function (event, current) {
+                    if (current && current.title) {
+                        $rootScope.title = current.title;
+                    }else{
+                        $rootScope.title = title;
+                    }
+                    self.endAll();
+                });
+
+                $rootScope.$on('$routeChangeError', function(){
+                    self.endAll();
+                });
+
+                $rootScope.$on('cancelProgressLoader', function() {
+                    self.endAll();
+                });
+            }
+        };
+    }
+    progressLoader.$inject = ["$timeout", "$window", "$q", "$rootScope", "$location"];
+
+    angular.module('sds-angular-controls').factory('progressLoader',progressLoader);
+
+})();
+
 angular.module('sds-angular-controls').run(['$templateCache', function($templateCache) {
   'use strict';
 
@@ -355,12 +552,17 @@ angular.module('sds-angular-controls').run(['$templateCache', function($template
 
 
   $templateCache.put('sds-angular-controls/form-directives/form-field-validation.html',
-    "<div ng-if=\"!hideValidationMessage\" class=\"has-error\" ng-show=\"showError()\" ng-messages=\"getError()\"> <span class=\"control-label\" ng-message=\"required\"> {{ validationFieldName || label || (field | labelCase) }} is required. </span> <span class=\"control-label\" ng-message=\"text\"> {{ validationFieldName || label || (field | labelCase) }} should be text. </span> <span class=\"control-label\" ng-message=\"integer\"> {{ validationFieldName || label || (field | labelCase) }} should be an integer. </span> <span class=\"control-label\" ng-message=\"email\"> {{ validationFieldName || label || (field | labelCase) }} should be an email address. </span> <span class=\"control-label\" ng-message=\"date\"> {{ validationFieldName || label || (field | labelCase) }} should be a date. </span> <span class=\"control-label\" ng-message=\"datetime\"> {{ validationFieldName || label || (field | labelCase) }} should be a datetime. </span> <span class=\"control-label\" ng-message=\"time\"> {{ validationFieldName || label || (field | labelCase) }} should be a time. </span> <span class=\"control-label\" ng-message=\"month\"> {{ validationFieldName || label || (field | labelCase) }} should be a month. </span> <span class=\"control-label\" ng-message=\"week\"> {{ validationFieldName || label || (field | labelCase) }} should be a week. </span> <span class=\"control-label\" ng-message=\"url\"> {{ validationFieldName || label || (field | labelCase) }} should be an url. </span> <span class=\"control-label\" ng-message=\"zip\"> {{ validationFieldName || label || (field | labelCase) }} should be a valid zipcode. </span> <span class=\"control-label\" ng-message=\"number\"> {{ validationFieldName || label || (field | labelCase) }} must be a number</span> <span class=\"control-label\" ng-message=\"tel\"> {{ validationFieldName || label || (field | labelCase) }} must be a phone number</span> <span class=\"control-label\" ng-message=\"color\"> {{ validationFieldName || label || (field | labelCase) }} must be a color</span> <span class=\"control-label\" ng-message=\"min\"> {{ validationFieldName || label || (field | labelCase) }} must be at least {{min}}. </span> <span class=\"control-label\" ng-message=\"max\"> {{ validationFieldName || label || (field | labelCase) }} must not exceed {{max}} </span> <span class=\"control-label\" ng-repeat=\"(k, v) in types\" ng-message=\"{{k}}\"> {{ validationFieldName || label || (field | labelCase) }}{{v[1]}}</span> </div>"
+    "<div ng-if=\"!hideValidationMessage\" class=\"has-error\" ng-show=\"showError()\" ng-messages=\"getError()\"> <span class=\"control-label\" ng-message=\"required\"> {{ validationFieldLabel || label || (field | labelCase) }} is required. </span> <span class=\"control-label\" ng-message=\"text\"> {{ validationFieldLabel || label || (field | labelCase) }} should be text. </span> <span class=\"control-label\" ng-message=\"integer\"> {{ validationFieldLabel || label || (field | labelCase) }} should be an integer. </span> <span class=\"control-label\" ng-message=\"email\"> {{ validationFieldLabel || label || (field | labelCase) }} should be an email address. </span> <span class=\"control-label\" ng-message=\"date\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a date. </span> <span class=\"control-label\" ng-message=\"datetime\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a datetime. </span> <span class=\"control-label\" ng-message=\"time\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a time. </span> <span class=\"control-label\" ng-message=\"month\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a month. </span> <span class=\"control-label\" ng-message=\"week\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a week. </span> <span class=\"control-label\" ng-message=\"url\"> {{ validationFieldLabel || label || (field | labelCase) }} should be an url. </span> <span class=\"control-label\" ng-message=\"zip\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a valid zipcode. </span> <span class=\"control-label\" ng-message=\"number\"> {{ validationFieldLabel || label || (field | labelCase) }} must be a number</span> <span class=\"control-label\" ng-message=\"tel\"> {{ validationFieldLabel || label || (field | labelCase) }} must be a phone number</span> <span ng-if=\"tel === true\" class=\"control-label\" ng-message=\"pattern\"> {{ validationFieldLabel || label || (field | labelCase) }} must be a phone number (xxx-xxx-xxxx or (xxx) xxx-xxxx) : {{tel}}</span> <span class=\"control-label\" ng-message=\"color\"> {{ validationFieldLabel || label || (field | labelCase) }} must be a color</span> <span class=\"control-label\" ng-message=\"min\"> {{ validationFieldLabel || label || (field | labelCase) }} must be at least {{min}}. </span> <span class=\"control-label\" ng-message=\"max\"> {{ validationFieldLabel || label || (field | labelCase) }} must not exceed {{max}} </span> <span class=\"control-label\" ng-message=\"taMaxText\"> {{ validationFieldLabel || label || (field | labelCase) }} must not exceed {{max}} </span> <span class=\"control-label\" ng-repeat=\"(k, v) in types\" ng-message=\"{{k}}\"> {{ validationFieldLabel || label || (field | labelCase) }}{{v[1]}}</span> </div>"
   );
 
 
   $templateCache.put('sds-angular-controls/form-directives/form-field.html',
-    "<div> <div ng-if=\"layout === 'stacked'\" class=\"row\"> <div class=\"form-group clearfix\" ng-class=\"{ 'has-error': showError() }\"> <div class=\"{{layoutCss}}\"> <label ng-if=\"showLabel\" class=\"control-label {{labelCss}}\"> {{ label || (field | labelCase) }} <span ng-if=\"isRequired && !isReadonly\">*</span></label> <div ng-if=\"!valueFormatter || !isReadonly\"><ng-transclude></ng-transclude></div> <input ng-if=\"valueFormatter && isReadonly\" class=\"form-control\" type=\"text\" ng-value=\"valueFormatter()\" name=\"{{field}}\" readonly> <!-- validation --> <div class=\"pull-left\" ng-include=\"'sds-angular-controls/form-directives/form-field-validation.html'\"></div> </div> </div> </div> <div ng-if=\"layout === 'horizontal'\" class=\"row inline-control\"> <div class=\"form-group clearfix\" ng-class=\"{ 'has-error': showError() }\"> <label ng-if=\"showLabel\" class=\"control-label {{labelCss}}\"> {{ label || (field | labelCase) }} <span ng-if=\"isRequired && !isReadonly\">*</span></label> <div class=\"{{childLayoutCss || 'col-md-6'}}\"> <span ng-if=\"!valueFormatter || !isReadonly\"><ng-transclude></ng-transclude></span> <input ng-if=\"valueFormatter && isReadonly\" class=\"form-control\" type=\"text\" ng-value=\"valueFormatter()\" name=\"{{field}}\" readonly> </div> <!-- validation --> <div ng-if=\"!hideValidationMessage\" ng-show=\"showError()\" class=\"popover validation right alert-danger\" style=\"display:inline-block; top:auto; left:auto; margin-top:-4px; min-width:240px\"> <div class=\"arrow\" style=\"top: 20px\"></div> <div class=\"popover-content\" ng-include=\"'sds-angular-controls/form-directives/form-field-validation.html'\"> </div> </div> </div> </div> <div ng-if=\"layout !== 'stacked' && layout !== 'horizontal'\" ng-class=\"{ 'has-error': showError() }\" class=\"grid-control {{::layoutCss}}\"> <span ng-if=\"!valueFormatter || !isReadonly\"><ng-transclude></ng-transclude></span> <input ng-if=\"valueFormatter && isReadonly\" class=\"form-control\" type=\"text\" ng-value=\"valueFormatter()\" name=\"{{field}}\" readonly> </div> </div>"
+    "<div> <div ng-if=\"layout === 'stacked'\" class=\"row\"> <div class=\"form-group clearfix\" ng-class=\"{ 'has-error': showError() }\"> <div class=\"{{layoutCss}}\"> <label ng-if=\"showLabel\" class=\"control-label {{labelCss}}\"> {{ label || (field | labelCase) }} <span ng-if=\"isRequired && !isReadonly\">*</span> <span ng-if=\"showToolTip\"><a href=\"#\" uib-popover=\"{{helpText}}\" popover-trigger=\"mouseenter\"><i class=\"fa fa-question-circle\"></i></a></span> <!--<span ng-if=\"showToolTip\" uib-popover=\"{{helpText}}\" popover-trigger=\"mouseenter\"><i class=\"fa fa-question-circle\"></i></span>--> </label> <div ng-if=\"!valueFormatter || !isReadonly\"><ng-transclude></ng-transclude></div> <input ng-if=\"valueFormatter && isReadonly\" class=\"form-control\" type=\"text\" ng-value=\"valueFormatter()\" name=\"{{field}}\" readonly> <!-- validation --> <div class=\"pull-left\" ng-include=\"'sds-angular-controls/form-directives/form-field-validation.html'\"></div> <div ng-if=\"showHelpText && !showToolTip\" class=\"help-text\"> <i>{{helpText}}</i> </div> </div> </div> </div> <div ng-if=\"layout === 'horizontal'\" class=\"row inline-control\"> <div class=\"form-group clearfix\" ng-class=\"{ 'has-error': showError() }\"> <label ng-if=\"showLabel\" class=\"control-label {{labelCss}}\"> {{ label || (field | labelCase) }} <span ng-if=\"isRequired && !isReadonly\">*</span></label> <div class=\"{{childLayoutCss || 'col-md-6'}}\"> <span ng-if=\"!valueFormatter || !isReadonly\"><ng-transclude></ng-transclude></span> <input ng-if=\"valueFormatter && isReadonly\" class=\"form-control\" type=\"text\" ng-value=\"valueFormatter()\" name=\"{{field}}\" readonly> </div> <!-- validation --> <div ng-if=\"!hideValidationMessage\" ng-show=\"showError()\" class=\"popover validation right alert-danger\" style=\"display:inline-block; top:auto; left:auto; margin-top:-4px; min-width:240px\"> <div class=\"arrow\" style=\"top: 20px\"></div> <div class=\"popover-content\" ng-include=\"'sds-angular-controls/form-directives/form-field-validation.html'\"> </div> </div> </div> </div> <div ng-if=\"layout !== 'stacked' && layout !== 'horizontal'\" ng-class=\"{ 'has-error': showError() }\" class=\"grid-control {{::layoutCss}}\"> <span ng-if=\"!valueFormatter || !isReadonly\"><ng-transclude></ng-transclude></span> <input ng-if=\"valueFormatter && isReadonly\" class=\"form-control\" type=\"text\" ng-value=\"valueFormatter()\" name=\"{{field}}\" readonly> </div> </div>"
+  );
+
+
+  $templateCache.put('sds-angular-controls/form-directives/form-unsaved-modal.html',
+    "<div id=\"add-control-modal\"> <div class=\"modal-header\"> <h4 class=\"modal-title\">Leave Page?</h4> </div> <div class=\"modal-body\"> <strong>You haven't saved your changes. Do you want to leave without finishing ?</strong> </div> <div class=\"modal-footer\"> <button type=\"button\" class=\"btn btn-primary\" ng-click=\"$dismiss()\">Stay on This Page</button> <button type=\"button\" class=\"btn btn-secondary\" ng-click=\"$close('CONTINUE')\">Leave This Page</button> </div> </div>"
   );
 
 }]);
@@ -625,290 +827,4 @@ angular.module('currencyMask', []).directive('currencyMask', function () {
     }
 
     angular.module('sds-angular-controls').filter('phoneNumber', phoneNumber);
-})();
-
-(function () {
-    angular.module('selectize-ng', [])
-        .directive('selectize', function () {
-            'use strict';
-
-            return {
-                restrict: 'A',
-                require: 'ngModel',
-                scope: {
-                    selectize: '&',
-                    options: '&',
-                    defaults: '&',
-                    selecteditems: '='
-                },
-                link: function (scope, element, attrs, ngModel) {
-
-                    var changing, runOnce, options, defaultValues, selectize, invalidValues = [];
-
-                    runOnce = false;
-
-                    // Default options
-                    options = angular.extend({
-                        delimiter: ',',
-                        persist: true,
-                        mode: (element[0].tagName === 'SELECT') ? 'single' : 'multi'
-                    }, scope.selectize() || {});
-
-                    // Activate the widget
-                    selectize = element.selectize(options)[0].selectize;
-
-                    selectize.on('change', function () {
-                        setModelValue(selectize.getValue());
-                    });
-
-                    function setModelValue(value) {
-                        if (changing) {
-                            if (attrs.selecteditems) {
-                                var selected = [];
-                                var values = parseValues(value);
-                                angular.forEach(values, function (i) {
-                                    selected.push(selectize.options[i]);
-                                });
-                                scope.$apply(function () {
-                                    scope.selecteditems = selected;
-                                });
-                            }
-                            return;
-                        }
-
-                        scope.$parent.$apply(function () {
-                            ngModel.$setViewValue(value);
-                            selectize.$control.toggleClass('ng-valid', ngModel.$valid);
-                            selectize.$control.toggleClass('ng-invalid', ngModel.$invalid);
-                            selectize.$control.toggleClass('ng-dirty', ngModel.$dirty);
-                            selectize.$control.toggleClass('ng-pristine', ngModel.$pristine);
-                        });
-
-
-                        if (options.mode === 'single') {
-                            selectize.blur();
-                        }
-                    }
-
-                    // Normalize the model value to an array
-                    function parseValues(value) {
-                        if (angular.isArray(value)) {
-                            return value;
-                        }
-                        if (!value) {
-                            return [];
-                        }
-                        return String(value).split(options.delimiter);
-                    }
-
-                    // Non-strict indexOf
-                    function indexOfLike(arr, val) {
-                        for (var i = 0; i < arr.length; i++) {
-                            if (arr[i] == val) {
-                                return i;
-                            }
-                        }
-                        return -1;
-                    }
-
-                    // Boolean wrapper to indexOfLike
-                    function contains(arr, val) {
-                        return indexOfLike(arr, val) !== -1;
-                    }
-
-                    // Store invalid items for late-loading options
-                    function storeInvalidValues(values, resultValues) {
-                        values.map(function (val) {
-                            if (!(contains(resultValues, val) || contains(invalidValues, val))) {
-                                invalidValues.push(val);
-                            }
-                        });
-                    }
-
-                    function restoreInvalidValues(newOptions, values) {
-                        var i, index;
-                        for (i = 0; i < newOptions.length; i++) {
-                            index = indexOfLike(invalidValues, newOptions[i][selectize.settings.valueField]);
-                            if (index !== -1) {
-                                values.push(newOptions[i][selectize.settings.valueField]);
-                                invalidValues.splice(index, 1);
-                            }
-                        }
-                    }
-
-                    function setSelectizeValue(value, old) {
-                        if (!value) {
-                            setTimeout(function () {
-                                selectize.clear();
-                                return;
-                            });
-                        }
-                        var values = parseValues(value);
-                        if (changing || values === parseValues(selectize.getValue())) {
-                            return;
-                        }
-                        changing = true;
-                        if (options.mode === 'single' && value) {
-                            setTimeout(function () {
-                                selectize.setValue(value);
-                                changing = false;
-                            });
-                        }
-                        else if (options.mode === 'multi' && value) {
-                            setTimeout(function () {
-                                selectize.setValue(values);
-                                changing = false;
-                                storeInvalidValues(values, parseValues(selectize.getValue()));
-                            });
-                        }else if(!value){
-                            changing = false;
-                        }
-
-                        selectize.$control.toggleClass('ng-valid', ngModel.$valid);
-                        selectize.$control.toggleClass('ng-invalid', ngModel.$invalid);
-                        selectize.$control.toggleClass('ng-dirty', ngModel.$dirty);
-                        selectize.$control.toggleClass('ng-pristine', ngModel.$pristine);
-                    }
-
-                    function setSelectizeOptions(newOptions) {
-                        if (!newOptions) {
-                            return;
-                        }
-
-                        var values;
-
-                        if (attrs.defaults && !runOnce) {
-                            changing = false;
-                            values = parseValues(scope.defaults());
-                            runOnce = !runOnce;
-                        } else if (!attrs.defaults) {
-                            values = parseValues(ngModel.$viewValue);
-                        }
-
-                        selectize.clearOptions();
-                        selectize.addOption(newOptions);
-                        selectize.refreshOptions(false);
-                        if (options.mode === 'multi' && newOptions && values) {
-                            restoreInvalidValues(newOptions, values);
-                        }
-                        setSelectizeValue(values);
-                    }
-
-                    scope.$parent.$watch(attrs.ngModel, setSelectizeValue);
-
-                    if (attrs.options) {
-                        scope.$parent.$watchCollection(attrs.options, setSelectizeOptions);
-                    }
-
-                    scope.$on('$destroy', function () {
-                        selectize.destroy();
-                    });
-                }
-            };
-        });
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    Selectize.define('dropdown_direction', function (options) {
-        var self = this;
-
-        /**
-         * Calculates and applies the appropriate position of the dropdown.
-         *
-         * Supports dropdownDirection up, down and auto. In case menu can't be fitted it's
-         * height is limited to don't fall out of display.
-         */
-        this.positionDropdown = (function () {
-            return function () {
-                var $control = this.$control;
-                var $dropdown = this.$dropdown;
-                var p = getPositions();
-
-                // direction
-                var direction = getDropdownDirection(p);
-                if (direction === 'up') {
-                    $dropdown.addClass('direction-up').removeClass('direction-down');
-                } else {
-                    $dropdown.addClass('direction-down').removeClass('direction-up');
-                }
-                $control.attr('data-dropdown-direction', direction);
-
-                // position
-                var isParentBody = this.settings.dropdownParent === 'body';
-                var offset = isParentBody ? $control.offset() : $control.position();
-                var fittedHeight;
-
-                switch (direction) {
-                    case 'up':
-                        offset.top -= p.dropdown.height;
-                        if (p.dropdown.height > p.control.above) {
-                            fittedHeight = p.control.above - 15;
-                        }
-                        break;
-
-                    case 'down':
-                        offset.top += p.control.height;
-                        if (p.dropdown.height > p.control.below) {
-                            fittedHeight = p.control.below - 15;
-                        }
-                        break;
-                }
-
-                if (fittedHeight) {
-                    this.$dropdown_content.css({'max-height': fittedHeight});
-                }
-
-                this.$dropdown.css({
-                    width: $control.outerWidth(),
-                    top: offset.top,
-                    left: offset.left
-                });
-            };
-        })();
-
-        /**
-         * Gets direction to display dropdown in. Either up or down.
-         */
-        function getDropdownDirection(positions) {
-            var direction = self.settings.dropdownDirection;
-
-            if (direction === 'auto') {
-                // down if dropdown fits
-                if (positions.control.below > positions.dropdown.height) {
-                    direction = 'down';
-                }
-                // otherwise direction with most space
-                else {
-                    direction = (positions.control.above > positions.control.below) ? 'up' : 'down';
-                }
-            }
-
-            return direction;
-        }
-
-        /**
-         * Get position information for the control and dropdown element.
-         */
-        function getPositions() {
-            var $control = self.$control;
-            var $window = $(window);
-
-            var control_height = $control.outerHeight(false);
-            var control_above = $control.offset().top - $window.scrollTop();
-            var control_below = $window.height() - control_above - control_height;
-
-            var dropdown_height = self.$dropdown.outerHeight(false);
-
-            return {
-                control: {
-                    height: control_height,
-                    above: control_above,
-                    below: control_below
-                },
-                dropdown: {
-                    height: dropdown_height
-                }
-            };
-        }
-    });
-
 })();
