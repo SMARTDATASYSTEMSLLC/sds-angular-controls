@@ -1,13 +1,13 @@
 /*! 
  * sds-angular-controls
  * Angular Directives used with sds-angular generator
- * @version 1.0.0 
+ * @version 1.0.1 
  * 
- * Copyright (c) 2015 Steve Gentile, David Benson 
+ * Copyright (c) 2016 Steve Gentile, David Benson 
  * @link https://github.com/SMARTDATASYSTEMSLLC/sds-angular-controls 
  * @license  MIT 
  */ 
-angular.module('sds-angular-controls', ['ui.bootstrap', 'toggle-switch', 'ngSanitize', 'selectize-ng', 'currencyMask']);
+angular.module('sds-angular-controls', ['ui.bootstrap', 'toggle-switch', 'ngSanitize', 'ngMessages', 'selectize-ng', 'currencyMask']);
 
 (function (){
   'use strict';
