@@ -3,7 +3,7 @@
          <div class='form-group clearfix' ng-class="{ 'has-error': showError() }">
 
         <div class="{{layoutCss}}">
-            <label ng-if="showLabel" class='control-label {{labelCss}}'>
+            <label ng-if="showLabel && showMyLabel" class='control-label {{labelCss}}'>
                 {{ label || (field | labelCase) }}
                 <span ng-if='isRequired && !isReadonly'>*</span>
                 <span ng-if="showToolTip"><a href="#" uib-popover="{{helpText}}" popover-trigger="mouseenter"><i class="fa fa-question-circle"></i></a></span>

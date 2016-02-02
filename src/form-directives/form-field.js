@@ -22,6 +22,7 @@
                 layoutCss               : '@?',
                 tel                     : '=?',
                 showLabel               : '=?',
+                showMyLabel             : '=?',
                 showHelpText            : '=?', //boolean - optional
                 showToolTip             : '=?',
                 helpText                : '@?',
@@ -36,7 +37,8 @@
                 this.$scope = $scope;
             },
             link: function($scope, element, attrs, form){
-                $scope.showLabel = $scope.showLabel !== false; // default to true
+                $scope.showLabel = $scope.showLabel !== false; // default to
+                $scope.showMyLabel = $scope.showMyLabel === false ? false : true;
                 $scope.showHelpText = $scope.showHelpText || false;
                 $scope.showToolTip = $scope.showToolTip || false;
                 $scope.hideValidationMessage = $scope.hideValidationMessage || false;
