@@ -63,7 +63,7 @@
                 // handle custom formatters for disabled controls
                 var formatter = _.find(formControlFormatters, function (v, k){ return $element.is(k); });
                 if (!formatter) {
-                    formatter = function (ngModel){ return function (){ return ngModel(); }};
+                    formatter = /*@ngInject*/function (ngModel){ return function (){ return ngModel(); }};
                 }
                 var getModel = function (obj, key){
                     var arr = key.split(".");
@@ -79,7 +79,7 @@
     }
 
     var formControlFormatters = {
-        'select[ng-options]': function (ngModel, $attrs, $parse, $scope){
+        'select[ng-options]': /*@ngInject*/function (ngModel, $attrs, $parse, $scope){
             var NG_OPTIONS_REGEXP = /^\s*([\s\S]+?)(?:\s+as\s+([\s\S]+?))?(?:\s+group\s+by\s+([\s\S]+?))?(?:\s+disable\s+when\s+([\s\S]+?))?\s+for\s+(?:([\$\w][\$\w]*)|(?:\(\s*([\$\w][\$\w]*)\s*,\s*([\$\w][\$\w]*)\s*\)))\s+in\s+([\s\S]+?)(?:\s+track\s+by\s+([\s\S]+?))?$/;
             var match = $attrs.ngOptions.match(NG_OPTIONS_REGEXP);
             var prop = match[5] || match[7];
@@ -99,22 +99,22 @@
                 return label($scope, rec);
             };
         },
-        'select[selectize]': function (ngModel, $attrs, $parse, $scope){
+        'select[selectize]': /*@ngInject*/function (ngModel, $attrs, $parse, $scope){
             return function (){ //TODO: correct this
                 return ngModel();
             };
         },
-        'toggle-switch': function (ngModel, $attrs){
+        'toggle-switch': /*@ngInject*/function (ngModel, $attrs){
             return function (){
                 return ngModel() ? $attrs.onLabel : $attrs.offLabel;
             };
         },
-        'timepicker': function (ngModel, $attrs){
+        'timepicker': /*@ngInject*/function (ngModel, $attrs){
             return function (){
                 return moment(ngModel()).format('h:mm a');
             };
         },
-        'input[datepicker-popup]': function (ngModel, $attrs, $scope, $interpolate){
+        'input[datepicker-popup]': /*@ngInject*/function (ngModel, $attrs, $scope, $interpolate){
             return function (){
                 return moment(ngModel()).format($interpolate($attrs.datepickerPopup)($scope).replace(/d/g, 'D').replace(/E/g, 'd').replace(/y/g, 'Y'));
             };
