@@ -1,7 +1,7 @@
 /*! 
  * sds-angular-controls
  * Angular Directives used with sds-angular generator
- * @version 1.3.4 
+ * @version 1.4.0 
  * 
  * Copyright (c) 2016 Steve Gentile, David Benson 
  * @link https://github.com/SMARTDATASYSTEMSLLC/sds-angular-controls 
@@ -293,18 +293,18 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'ngSanitize', 'ngMessage
         }
     }
 
-    function datepickerPopup (){
-        return {
-            restrict: 'EAC',
-            require: 'ngModel',
-            link: function($scope, $element, $attrs, controller) {
-                //remove the default formatter from the input directive to prevent conflict
-                controller.$formatters.shift();
-            }
-        }
-    }
+    // function uibDatepickerPopup (){
+    //     return {
+    //         restrict: 'EAC',
+    //         require: 'ngModel',
+    //         link: function($scope, $element, $attrs, controller) {
+    //             //remove the default formatter from the input directive to prevent conflict
+    //             controller.$formatters.shift();
+    //         }
+    //     }
+    // }
 
-    angular.module('sds-angular-controls').directive('formDatePicker', formDatePicker).directive('datepickerPopup', datepickerPopup);
+    angular.module('sds-angular-controls').directive('formDatePicker', formDatePicker);
 })();
 
 /**
@@ -549,7 +549,7 @@ angular.module('sds-angular-controls').run(['$templateCache', function($template
   'use strict';
 
   $templateCache.put('sds-angular-controls/form-directives/form-date-picker.html',
-    "<span class=\"input-group\"> <input type=\"text\" form-control class=\"datepicker\" placeholder=\"{{placeholder || container.label}}\" ng-model=\"sdsModel\" min-date=\"min\" max-date=\"max\" datepicker-popup=\"{{::dateFormat}}\" is-open=\"isOpened\"> <span class=\"input-group-btn\"> <button type=\"button\" class=\"btn btn-default\" ng-click=\"open($event)\"><i class=\"glyphicon glyphicon-calendar\"></i></button> </span> </span>"
+    "<span class=\"input-group\"> <input type=\"text\" form-control class=\"datepicker\" placeholder=\"{{placeholder || container.label}}\" ng-model=\"sdsModel\" min-date=\"min\" max-date=\"max\" uib-datepicker-popup=\"{{::dateFormat}}\" is-open=\"isOpened\"> <span class=\"input-group-btn\"> <button type=\"button\" class=\"btn btn-default\" ng-click=\"open($event)\"><i class=\"glyphicon glyphicon-calendar\"></i></button> </span> </span>"
   );
 
 

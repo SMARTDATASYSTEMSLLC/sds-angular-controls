@@ -46,16 +46,16 @@
         }
     }
 
-    function datepickerPopup (){
-        return {
-            restrict: 'EAC',
-            require: 'ngModel',
-            link: function($scope, $element, $attrs, controller) {
-                //remove the default formatter from the input directive to prevent conflict
-                controller.$formatters.shift();
-            }
-        }
-    }
+    // function uibDatepickerPopup (){
+    //     return {
+    //         restrict: 'EAC',
+    //         require: 'ngModel',
+    //         link: function($scope, $element, $attrs, controller) {
+    //             //remove the default formatter from the input directive to prevent conflict
+    //             controller.$formatters.shift();
+    //         }
+    //     }
+    // }
 
-    angular.module('sds-angular-controls').directive('formDatePicker', formDatePicker).directive('datepickerPopup', datepickerPopup);
+    angular.module('sds-angular-controls').directive('formDatePicker', formDatePicker);
 })();
