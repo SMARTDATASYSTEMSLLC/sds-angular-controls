@@ -42,8 +42,8 @@
                 $scope.showHelpText = $scope.showHelpText || false;
                 $scope.showToolTip = $scope.showToolTip || false;
                 $scope.hideValidationMessage = $scope.hideValidationMessage || false;
-                $scope.layoutCss = $scope.layoutCss || "col-md-12";
-                $scope.errorLayoutCss = $scope.errorLayoutCss || "col-md-12";
+                $scope.layoutCss = $scope.layoutCss || "";
+                $scope.errorLayoutCss = $scope.errorLayoutCss || "";
 
 
 

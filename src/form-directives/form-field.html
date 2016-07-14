@@ -1,7 +1,5 @@
 <div>
-    <div ng-if="layout === 'stacked'" class="row">
-         <div class='form-group clearfix' ng-class="{ 'has-error': showError() }">
-
+    <div class='form-group clearfix' ng-class="{ 'has-error': showError() }" ng-if="layout === 'stacked'">
         <div class="{{layoutCss}}">
             <label ng-if="showLabel && showMyLabel" class='control-label {{labelCss}}'>
                 {{ label || (field | labelCase) }}
@@ -19,7 +17,6 @@
                 <i>{{helpText}}</i>
             </div>
         </div>
-         </div>
     </div>
 
     <div ng-if="layout === 'horizontal'" class="row inline-control">
