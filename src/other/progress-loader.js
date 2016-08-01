@@ -1,10 +1,7 @@
-/**
- * Created by stevegentile on 9/1/15.
- */
 (function (){
     'use strict';
 
-    function progressLoader($timeout, $window, $q, $rootScope, $location) {
+    function progressLoader($q, $rootScope, $location) {
         var active = 0;
         var notice = null;
 

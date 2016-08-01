@@ -61,7 +61,15 @@
 
 
                 // handle custom formatters for disabled controls
-                var formatter = _.find(formControlFormatters, function (v, k){ return $element.is(k); });
+                var formatter = null;
+                for (var k in formControlFormatters){
+                    var tag = k.split(/\[\]/g);
+
+                    if ($element[0].tagName === tag[0] && (!tag[1] || $element.attr(tag[1]) !== undefined)){
+                        formatter = formControlFormatters[k];
+                    }
+                }
+
                 if (!formatter) {
                     formatter = /*@ngInject*/function (ngModel){ return function (){ return ngModel(); }};
                 }
@@ -91,11 +99,14 @@
                 var model = ngModel();
 
                 var rec = {};
-                rec[prop] = _.find(valuesFn($scope), function (v){
+                angular.forEach(valuesFn($scope), function (v){
                     var option = {};
                     option[prop] = v;
-                    return result($scope, option) === model;
+                    if (result($scope, option) === model){
+                        rec[prop] = v;
+                    }
                 });
+
                 return label($scope, rec);
             };
         },
@@ -109,12 +120,12 @@
                 return ngModel() ? $attrs.onLabel : $attrs.offLabel;
             };
         },
-        'timepicker': /*@ngInject*/function (ngModel, $attrs){
+        'timepicker': /*@ngInject*/function (ngModel, $attrs, moment){
             return function (){
                 return moment(ngModel()).format('h:mm a');
             };
         },
-        'input[datepicker-popup]': /*@ngInject*/function (ngModel, $attrs, $scope, $interpolate){
+        'input[datepicker-popup]': /*@ngInject*/function (ngModel, $attrs, $scope, $interpolate, moment){
             return function (){
                 return moment(ngModel()).format($interpolate($attrs.datepickerPopup)($scope).replace(/d/g, 'D').replace(/E/g, 'd').replace(/y/g, 'Y'));
             };

@@ -1,7 +1,7 @@
 /*! 
  * sds-angular-controls
  * Angular Directives used with sds-angular generator
- * @version 1.4.1 
+ * @version 1.4.2 
  * 
  * Copyright (c) 2016 Steve Gentile, David Benson 
  * @link https://github.com/SMARTDATASYSTEMSLLC/sds-angular-controls 
@@ -181,7 +181,15 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'ngSanitize', 'ngMessage
 
 
                 // handle custom formatters for disabled controls
-                var formatter = _.find(formControlFormatters, function (v, k){ return $element.is(k); });
+                var formatter = null;
+                for (var k in formControlFormatters){
+                    var tag = k.split(/\[\]/g);
+
+                    if ($element[0].tagName === tag[0] && (!tag[1] || $element.attr(tag[1]) !== undefined)){
+                        formatter = formControlFormatters[k];
+                    }
+                }
+
                 if (!formatter) {
                     formatter = /*@ngInject*/["ngModel", function (ngModel){ return function (){ return ngModel(); }}];
                 }
@@ -212,11 +220,14 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'ngSanitize', 'ngMessage
                 var model = ngModel();
 
                 var rec = {};
-                rec[prop] = _.find(valuesFn($scope), function (v){
+                angular.forEach(valuesFn($scope), function (v){
                     var option = {};
                     option[prop] = v;
-                    return result($scope, option) === model;
+                    if (result($scope, option) === model){
+                        rec[prop] = v;
+                    }
                 });
+
                 return label($scope, rec);
             };
         }],
@@ -230,12 +241,12 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'ngSanitize', 'ngMessage
                 return ngModel() ? $attrs.onLabel : $attrs.offLabel;
             };
         }],
-        'timepicker': /*@ngInject*/["ngModel", "$attrs", function (ngModel, $attrs){
+        'timepicker': /*@ngInject*/["ngModel", "$attrs", "moment", function (ngModel, $attrs, moment){
             return function (){
                 return moment(ngModel()).format('h:mm a');
             };
         }],
-        'input[datepicker-popup]': /*@ngInject*/["ngModel", "$attrs", "$scope", "$interpolate", function (ngModel, $attrs, $scope, $interpolate){
+        'input[datepicker-popup]': /*@ngInject*/["ngModel", "$attrs", "$scope", "$interpolate", "moment", function (ngModel, $attrs, $scope, $interpolate, moment){
             return function (){
                 return moment(ngModel()).format($interpolate($attrs.datepickerPopup)($scope).replace(/d/g, 'D').replace(/E/g, 'd').replace(/y/g, 'Y'));
             };
@@ -250,7 +261,7 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'ngSanitize', 'ngMessage
 
 (function () {
     'use strict';
-    function formDatePicker () {
+    function formDatePicker (moment) {
         return{
             restrict: 'EA',
             require: '^form-field',
@@ -292,33 +303,20 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'ngSanitize', 'ngMessage
             }
         }
     }
+    formDatePicker.$inject = ["moment"];
 
-    // function uibDatepickerPopup (){
-    //     return {
-    //         restrict: 'EAC',
-    //         require: 'ngModel',
-    //         link: function($scope, $element, $attrs, controller) {
-    //             //remove the default formatter from the input directive to prevent conflict
-    //             controller.$formatters.shift();
-    //         }
-    //     }
-    // }
 
     angular.module('sds-angular-controls').directive('formDatePicker', formDatePicker);
 })();
 
-/**
- * Created by stevegentile on 12/19/14.
- */
 (function () {
     'use strict';
-    function formField () {
+    function formField ($interpolate) {
         return{
             restrict: 'EA',
             transclude: true,
             replace: true,
             scope: {
-                record                  : '=' , //two-way binding
                 isRequired              : '=?',
                 isReadonly              : '=?',
                 field                   : '@' , //one-way binding
@@ -351,8 +349,6 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'ngSanitize', 'ngMessage
                 $scope.layoutCss = $scope.layoutCss || "";
                 $scope.errorLayoutCss = $scope.errorLayoutCss || "";
 
-
-
                 $scope.layout = $scope.layout || "stacked";
                 if($scope.layout === "horizontal"){
                     $scope.labelCss = $scope.labelCss || "col-md-4";
@@ -376,46 +372,29 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'ngSanitize', 'ngMessage
                         return form[$scope.field].$error;
                     }
                 };
+                $scope.interpolate = function (val){
+                    return $interpolate(val)($scope.$parent);
+                };
             }
 
         }
     }
+    formField.$inject = ["$interpolate"];
 
     angular.module('sds-angular-controls').directive('formField', formField);
 })();
 
-(function () {
-    'use strict';
-
-    function UnsavedConfirmationModalCtrl($scope) {
-
-    }
-    UnsavedConfirmationModalCtrl.$inject = ["$scope"];
-
-    angular.module('sds-angular-controls').controller('UnsavedConfirmationModalCtrl',UnsavedConfirmationModalCtrl);
-})();
 (function(){
     'use strict';
-    function formUnsaved ($rootScope, $location, $modal, progressLoader) {
+    function formUnsaved ($location, $modal, progressLoader) {
         return {
             restrict: 'A',
             require: '^form',
             link: function($scope, element, attrs, form){
-
-                //element.on("submit", function(event) {
-                //    if (form && form.$valid) {
-                //        progressLoader.start();
-                //    }
-                //});
-
-
                 function routeChange(event) {
                     if(form.$dirty){
-                        //var confirm = $window.confirm('You have unsaved changes');
-                        //if(!confirm) {
                         progressLoader.endAll();
                         event.preventDefault();
-                        //}
                         var targetPath = $location.path();
 
                         $modal.open({
@@ -434,14 +413,15 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'ngSanitize', 'ngMessage
             }
         }
     }
-    formUnsaved.$inject = ["$rootScope", "$location", "$modal", "progressLoader"];
+    formUnsaved.$inject = ["$location", "$modal", "progressLoader"];
 
     angular.module('sds-angular-controls').directive('formUnsaved', formUnsaved);
 })();
+
 (function (){
     'use strict';
 
-    function progressLoader($timeout, $window, $q, $rootScope, $location) {
+    function progressLoader($q, $rootScope, $location) {
         var active = 0;
         var notice = null;
 
@@ -539,7 +519,7 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'ngSanitize', 'ngMessage
             }
         };
     }
-    progressLoader.$inject = ["$timeout", "$window", "$q", "$rootScope", "$location"];
+    progressLoader.$inject = ["$q", "$rootScope", "$location"];
 
     angular.module('sds-angular-controls').factory('progressLoader',progressLoader);
 
@@ -554,7 +534,7 @@ angular.module('sds-angular-controls').run(['$templateCache', function($template
 
 
   $templateCache.put('sds-angular-controls/form-directives/form-field-validation.html',
-    "<div ng-if=\"!hideValidationMessage\" class=\"has-error\" ng-show=\"showError()\" ng-messages=\"getError()\"> <span class=\"control-label\" ng-message=\"required\"> {{ validationFieldLabel || label || (field | labelCase) }} is required. </span> <span class=\"control-label\" ng-message=\"text\"> {{ validationFieldLabel || label || (field | labelCase) }} should be text. </span> <span class=\"control-label\" ng-message=\"integer\"> {{ validationFieldLabel || label || (field | labelCase) }} should be an integer. </span> <span class=\"control-label\" ng-message=\"email\"> {{ validationFieldLabel || label || (field | labelCase) }} should be an email address. </span> <span class=\"control-label\" ng-message=\"date\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a date. </span> <span class=\"control-label\" ng-message=\"datetime\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a datetime. </span> <span class=\"control-label\" ng-message=\"time\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a time. </span> <span class=\"control-label\" ng-message=\"month\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a month. </span> <span class=\"control-label\" ng-message=\"week\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a week. </span> <span class=\"control-label\" ng-message=\"url\"> {{ validationFieldLabel || label || (field | labelCase) }} should be an url. </span> <span class=\"control-label\" ng-message=\"zip\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a valid zipcode. </span> <span class=\"control-label\" ng-message=\"number\"> {{ validationFieldLabel || label || (field | labelCase) }} must be a number</span> <span class=\"control-label\" ng-message=\"tel\"> {{ validationFieldLabel || label || (field | labelCase) }} must be a phone number</span> <span ng-if=\"tel === true\" class=\"control-label\" ng-message=\"pattern\"> {{ validationFieldLabel || label || (field | labelCase) }} must be a phone number (xxx-xxx-xxxx or (xxx) xxx-xxxx)</span> <span class=\"control-label\" ng-message=\"color\"> {{ validationFieldLabel || label || (field | labelCase) }} must be a color</span> <span class=\"control-label\" ng-message=\"min\"> {{ validationFieldLabel || label || (field | labelCase) }} must be at least {{min}}. </span> <span class=\"control-label\" ng-message=\"max\"> {{ validationFieldLabel || label || (field | labelCase) }} must not exceed {{max}} </span> <span class=\"control-label\" ng-message=\"taMaxText\"> {{ validationFieldLabel || label || (field | labelCase) }} must not exceed {{max}} </span> <span class=\"control-label\" ng-repeat=\"(k, v) in types\" ng-message=\"{{k}}\"> {{ validationFieldLabel || label || (field | labelCase) }}{{v[1]}}</span> </div>"
+    "<div ng-if=\"!hideValidationMessage\" class=\"has-error\" ng-show=\"showError()\" ng-messages=\"getError()\"> <span class=\"control-label\" ng-message=\"required\"> {{ validationFieldLabel || label || (field | labelCase) }} is required. </span> <span class=\"control-label\" ng-message=\"text\"> {{ validationFieldLabel || label || (field | labelCase) }} should be text. </span> <span class=\"control-label\" ng-message=\"integer\"> {{ validationFieldLabel || label || (field | labelCase) }} should be an integer. </span> <span class=\"control-label\" ng-message=\"email\"> {{ validationFieldLabel || label || (field | labelCase) }} should be an email address. </span> <span class=\"control-label\" ng-message=\"date\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a date. </span> <span class=\"control-label\" ng-message=\"datetime\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a datetime. </span> <span class=\"control-label\" ng-message=\"time\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a time. </span> <span class=\"control-label\" ng-message=\"month\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a month. </span> <span class=\"control-label\" ng-message=\"week\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a week. </span> <span class=\"control-label\" ng-message=\"url\"> {{ validationFieldLabel || label || (field | labelCase) }} should be an url. </span> <span class=\"control-label\" ng-message=\"zip\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a valid zipcode. </span> <span class=\"control-label\" ng-message=\"number\"> {{ validationFieldLabel || label || (field | labelCase) }} must be a number</span> <span class=\"control-label\" ng-message=\"tel\"> {{ validationFieldLabel || label || (field | labelCase) }} must be a phone number</span> <span ng-if=\"tel === true\" class=\"control-label\" ng-message=\"pattern\"> {{ validationFieldLabel || label || (field | labelCase) }} must be a phone number (xxx-xxx-xxxx or (xxx) xxx-xxxx)</span> <span class=\"control-label\" ng-message=\"color\"> {{ validationFieldLabel || label || (field | labelCase) }} must be a color</span> <span class=\"control-label\" ng-message=\"min\"> {{ validationFieldLabel || label || (field | labelCase) }} must be at least {{interpolate(min)}}. </span> <span class=\"control-label\" ng-message=\"max\"> {{ validationFieldLabel || label || (field | labelCase) }} must not exceed {{interpolate(max)}} </span> <span class=\"control-label\" ng-message=\"taMaxText\"> {{ validationFieldLabel || label || (field | labelCase) }} must not exceed {{interpolate(max)}} </span> <span class=\"control-label\" ng-repeat=\"(k, v) in types\" ng-message=\"{{k}}\"> {{ validationFieldLabel || label || (field | labelCase) }}{{v[1]}}</span> </div>"
   );
 
 
@@ -633,134 +613,6 @@ angular.module('currencyMask', []).directive('currencyMask', function () {
         }
     };
 });
-/* TODO: move these hacks into selectize-ng
-
- <select ng-if="!container.isReadonly && !reload"
- ng-readonly="container.isReadonly"
- ng-required="container.isRequired"
- name="{{::container.field}}"
- selectize="options"
- options="innerItems"
- class="{{::container.layout !== 'horizontal' ? layoutCss : ''}}"
- ng-model="container.record[container.field]"></select>
- <!-- optionValue as optionLabel for arrayItem in array -->
-
-(function () {
-    'use strict';
-    function formAutocomplete ($timeout) {
-        return{
-            restrict: 'EA',
-            require: '^formField',
-            replace: true,
-            scope: {
-                items           : '=',
-                groups          : '=?',
-                itemKey         : '@?',
-                itemValue       : '@?',
-                itemSort        : '@?',
-                itemGroupKey    : '@?',
-                itemGroupValue  : '@?',
-                dropdownDirection:'@?',
-                allowCustom     : '=?'
-            },
-            templateUrl: 'sds-angular-controls/form-directives/form-autocomplete.html',
-
-            link: function (scope, element, attr, container) {
-                scope.container = container.$scope;
-                scope.innerItems = [];
-                //// hack to force reloading options
-                scope.$watch("items", function(newVal, oldVal){
-                    if(scope.items && !_.isArray(scope.items)){
-                        scope.innerItems = convertToArray();
-                    }else{
-                        var i = 0;
-                        scope.innerItems = _.map(scope.items, function (v){
-                            v.__sort = i++;
-                            return v;
-                        });
-                    }
-
-                    if(newVal && newVal !== oldVal){
-                        scope.reload = true;
-                        $timeout(function (){
-                            scope.reload = false;
-                        });
-                    }
-                });
-
-                // one-time bindings:
-                if (attr.layoutCss && container.$scope.layout === 'horizontal'){
-                    scope.$watch('layoutCss', function (){container.$scope.childLayoutCss = scope.layoutCss; });
-                }
-
-
-                function convertToArray(){
-                    var i = 0;
-                    var items = _.reduce(scope.items, function(result, item, key) {
-                        //result[item["item-key"]] = item["item-value"];
-                        result.push({
-                            "itemKey" : key,
-                            "itemValue": item,
-                            "__sort": i++
-                        });
-
-                        return result;
-                    }, []);
-                    scope.options.valueField = "itemKey";
-                    scope.options.labelField = "itemValue";
-                    scope.options.searchField = ["itemValue"];
-                    scope.reload = true;
-                    $timeout(function (){
-                        scope.reload = false;
-                    });
-
-                    return items;
-                }
-
-
-                var options = {
-                    plugins: ['dropdown_direction'],
-                    dropdownDirection: scope.dropdownDirection || 'auto',
-                    valueField: scope.itemKey,
-                    labelField: scope.itemValue,
-                    searchField: [scope.itemValue],
-                    sortField:  scope.itemSort || '__sort',
-                    maxOptions: 1200
-                };
-
-
-
-                if (scope.allowCustom){
-                    options.persist = false;
-                    options.create = true;
-                }
-
-                if (scope.itemGroupKey && _.isArray(scope.groups)){
-                    options.optgroups =  scope.groups;
-                    options.optgroupField = scope.itemGroupKey;
-                    options.optgroupValueField = scope.itemGroupKey;
-                    options.optgroupLabelField = scope.itemGroupValue;
-
-                    scope.$watch('groups', function (val, old){
-                        if (val !== old){
-                            scope.options.optgroups =  scope.groups;
-                            scope.reload = true;
-                            $timeout(function (){
-                                scope.reload = false;
-                            });
-                        }
-                    });
-                }
-
-                scope.options = options;
-            }
-        }
-    }
-
-    angular.module('sds-angular-controls').directive('formAutocomplete', formAutocomplete);
-
-})();
-*/
 (function () {
   'use strict';
   function maskInput (){

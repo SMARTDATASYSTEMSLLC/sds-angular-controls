@@ -1,18 +1,11 @@
-/**
- * Created by stevegentile on 12/19/14.
- */
-/**
- * Created by stevegentile on 12/19/14.
- */
 (function () {
     'use strict';
-    function formField () {
+    function formField ($interpolate) {
         return{
             restrict: 'EA',
             transclude: true,
             replace: true,
             scope: {
-                record                  : '=' , //two-way binding
                 isRequired              : '=?',
                 isReadonly              : '=?',
                 field                   : '@' , //one-way binding
@@ -45,8 +38,6 @@
                 $scope.layoutCss = $scope.layoutCss || "";
                 $scope.errorLayoutCss = $scope.errorLayoutCss || "";
 
-
-
                 $scope.layout = $scope.layout || "stacked";
                 if($scope.layout === "horizontal"){
                     $scope.labelCss = $scope.labelCss || "col-md-4";
@@ -69,6 +60,9 @@
                     if ($scope.field && form && form[$scope.field]) {
                         return form[$scope.field].$error;
                     }
+                };
+                $scope.interpolate = function (val){
+                    return $interpolate(val)($scope.$parent);
                 };
             }
 
