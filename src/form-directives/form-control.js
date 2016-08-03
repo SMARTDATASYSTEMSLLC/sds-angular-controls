@@ -23,7 +23,7 @@
                 if (formField.$scope.validationFieldName){
                     name = formField.$scope.validationFieldName;
                 } else {
-                    name = $attrs.name || ($attrs.ngModel && $attrs.ngModel.substr($attrs.ngModel.lastIndexOf('.')+1)) || ($attrs.sdsModel && $attrs.sdsModel.substr($attrs.sdsModel.lastIndexOf('.')+1));
+                    name = $attrs.name || ($attrs.sdsModel && $attrs.sdsModel.substr($attrs.sdsModel.lastIndexOf('.')+1) || ($attrs.ngModel && $attrs.ngModel.substr($attrs.ngModel.lastIndexOf('.')+1)));
                 }
 
                 if(!name){
@@ -31,7 +31,7 @@
                 }
 
                 $element.attr('name', name);
-                $element.attr('ng-required', $attrs.ngRequired || '{{container.isRequired}}');
+                $element.attr('ng-required', $attrs.ngRequired || $attrs.required || '{{container.isRequired}}');
                 $element.removeAttr('form-control');
                 $element.removeAttr('data-form-control');
 
@@ -42,6 +42,10 @@
                 $scope.container = formField.$scope;
 
                 formField.$scope.tel = false;
+
+                if ($element.attr('required')){
+                    formField.$scope.isRequired = true;
+                }
 
                 if($element.attr('type') === 'tel'){
                     formField.$scope.tel = true;

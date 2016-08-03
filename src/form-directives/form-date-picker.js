@@ -10,12 +10,18 @@
                 dateFormat       : '@',
                 max              : '=?',
                 min              : '=?',
-                placeholder      : '@?'
+                placeholder      : '@?',
+                required         : '=?'
             },
-            templateUrl: 'sds-angular-controls/form-directives/form-date-picker.html',
+            template: function($element, $attrs){
+
+
+                return '<span class="input-group"><input type="text" form-control class="datepicker" placeholder="{{placeholder || container.label}}" ' +
+                    'ng-model="$parent.' + $attrs.sdsModel + '" min-date="min" max-date="max" uib-datepicker-popup="{{::dateFormat}}" is-open="isOpened">' +
+                    '<span class="input-group-btn"><button type="button" class="btn btn-default" ng-click="open($event)"><i class="glyphicon glyphicon-calendar"></i></button> </span> </span>';
+            },
 
             link: function ($scope, $element, $attrs, formField) {
-                var input = $element.find('input');
                 $scope.container = formField.$scope;
                 $scope.dateFormat = $scope.dateFormat || "MM-dd-yyyy";
 

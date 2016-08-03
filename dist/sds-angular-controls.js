@@ -143,15 +143,17 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'ngSanitize', 'ngMessage
                 if (formField.$scope.validationFieldName){
                     name = formField.$scope.validationFieldName;
                 } else {
-                    name = $attrs.name || ($attrs.ngModel && $attrs.ngModel.substr($attrs.ngModel.lastIndexOf('.')+1)) || ($attrs.sdsModel && $attrs.sdsModel.substr($attrs.sdsModel.lastIndexOf('.')+1));
+                    name = $attrs.name || ($attrs.sdsModel && $attrs.sdsModel.substr($attrs.sdsModel.lastIndexOf('.')+1) || ($attrs.ngModel && $attrs.ngModel.substr($attrs.ngModel.lastIndexOf('.')+1)));
                 }
+
+                console.log(name);
 
                 if(!name){
                     alert('control must have a name via validationFieldName or model(ng/sds)');
                 }
 
                 $element.attr('name', name);
-                $element.attr('ng-required', $attrs.ngRequired || '{{container.isRequired}}');
+                $element.attr('ng-required', $attrs.ngRequired || $attrs.required || '{{container.isRequired}}');
                 $element.removeAttr('form-control');
                 $element.removeAttr('data-form-control');
 
@@ -162,6 +164,10 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'ngSanitize', 'ngMessage
                 $scope.container = formField.$scope;
 
                 formField.$scope.tel = false;
+
+                if ($element.attr('required')){
+                    formField.$scope.isRequired = true;
+                }
 
                 if($element.attr('type') === 'tel'){
                     formField.$scope.tel = true;
@@ -271,12 +277,20 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'ngSanitize', 'ngMessage
                 dateFormat       : '@',
                 max              : '=?',
                 min              : '=?',
-                placeholder      : '@?'
+                placeholder      : '@?',
+                required         : '=?'
             },
-            templateUrl: 'sds-angular-controls/form-directives/form-date-picker.html',
+            template: function($element, $attrs){
+
+
+                return '<span class="input-group"><input type="text" form-control class="datepicker" placeholder="{{placeholder || container.label}}" ' +
+                    'ng-model="$parent.' + $attrs.sdsModel + '" min-date="min" max-date="max" uib-datepicker-popup="{{::dateFormat}}" is-open="isOpened">' +
+                    '<span class="input-group-btn"><button type="button" class="btn btn-default" ng-click="open($event)"><i class="glyphicon glyphicon-calendar"></i></button> </span> </span>';
+            },
 
             link: function ($scope, $element, $attrs, formField) {
                 var input = $element.find('input');
+                $scope.sdsModelName = $attrs.sdsModel;
                 $scope.container = formField.$scope;
                 $scope.dateFormat = $scope.dateFormat || "MM-dd-yyyy";
 
@@ -527,11 +541,6 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'ngSanitize', 'ngMessage
 
 angular.module('sds-angular-controls').run(['$templateCache', function($templateCache) {
   'use strict';
-
-  $templateCache.put('sds-angular-controls/form-directives/form-date-picker.html',
-    "<span class=\"input-group\"> <input type=\"text\" form-control class=\"datepicker\" placeholder=\"{{placeholder || container.label}}\" ng-model=\"sdsModel\" min-date=\"min\" max-date=\"max\" uib-datepicker-popup=\"{{::dateFormat}}\" is-open=\"isOpened\"> <span class=\"input-group-btn\"> <button type=\"button\" class=\"btn btn-default\" ng-click=\"open($event)\"><i class=\"glyphicon glyphicon-calendar\"></i></button> </span> </span>"
-  );
-
 
   $templateCache.put('sds-angular-controls/form-directives/form-field-validation.html',
     "<div ng-if=\"!hideValidationMessage\" class=\"has-error\" ng-show=\"showError()\" ng-messages=\"getError()\"> <span class=\"control-label\" ng-message=\"required\"> {{ validationFieldLabel || label || (field | labelCase) }} is required. </span> <span class=\"control-label\" ng-message=\"text\"> {{ validationFieldLabel || label || (field | labelCase) }} should be text. </span> <span class=\"control-label\" ng-message=\"integer\"> {{ validationFieldLabel || label || (field | labelCase) }} should be an integer. </span> <span class=\"control-label\" ng-message=\"email\"> {{ validationFieldLabel || label || (field | labelCase) }} should be an email address. </span> <span class=\"control-label\" ng-message=\"date\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a date. </span> <span class=\"control-label\" ng-message=\"datetime\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a datetime. </span> <span class=\"control-label\" ng-message=\"time\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a time. </span> <span class=\"control-label\" ng-message=\"month\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a month. </span> <span class=\"control-label\" ng-message=\"week\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a week. </span> <span class=\"control-label\" ng-message=\"url\"> {{ validationFieldLabel || label || (field | labelCase) }} should be an url. </span> <span class=\"control-label\" ng-message=\"zip\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a valid zipcode. </span> <span class=\"control-label\" ng-message=\"number\"> {{ validationFieldLabel || label || (field | labelCase) }} must be a number</span> <span class=\"control-label\" ng-message=\"tel\"> {{ validationFieldLabel || label || (field | labelCase) }} must be a phone number</span> <span ng-if=\"tel === true\" class=\"control-label\" ng-message=\"pattern\"> {{ validationFieldLabel || label || (field | labelCase) }} must be a phone number (xxx-xxx-xxxx or (xxx) xxx-xxxx)</span> <span class=\"control-label\" ng-message=\"color\"> {{ validationFieldLabel || label || (field | labelCase) }} must be a color</span> <span class=\"control-label\" ng-message=\"min\"> {{ validationFieldLabel || label || (field | labelCase) }} must be at least {{interpolate(min)}}. </span> <span class=\"control-label\" ng-message=\"max\"> {{ validationFieldLabel || label || (field | labelCase) }} must not exceed {{interpolate(max)}} </span> <span class=\"control-label\" ng-message=\"taMaxText\"> {{ validationFieldLabel || label || (field | labelCase) }} must not exceed {{interpolate(max)}} </span> <span class=\"control-label\" ng-repeat=\"(k, v) in types\" ng-message=\"{{k}}\"> {{ validationFieldLabel || label || (field | labelCase) }}{{v[1]}}</span> </div>"
