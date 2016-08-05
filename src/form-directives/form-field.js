@@ -55,10 +55,17 @@
                         var field = form[$scope.field];
                         return field.$invalid && (form.$submitted || field.$dirty && !$scope.isFocused);
                     }
+                    if ($scope.validationFieldName && form && form[$scope.validationFieldName]){
+                        var field = form[$scope.validationFieldName];
+                        return field.$invalid && (form.$submitted || field.$dirty && !$scope.isFocused);
+                    }
                 };
                 $scope.getError = function (){
                     if ($scope.field && form && form[$scope.field]) {
                         return form[$scope.field].$error;
+                    }
+                    if ($scope.validationFieldName && form && form[$scope.validationFieldName]){
+                        return form[$scope.validationFieldName].$error;
                     }
                 };
                 $scope.interpolate = function (val){

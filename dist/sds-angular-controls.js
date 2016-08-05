@@ -1,7 +1,7 @@
 /*! 
  * sds-angular-controls
  * Angular Directives used with sds-angular generator
- * @version 1.4.2 
+ * @version 1.4.3 
  * 
  * Copyright (c) 2016 Steve Gentile, David Benson 
  * @link https://github.com/SMARTDATASYSTEMSLLC/sds-angular-controls 
@@ -146,8 +146,6 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'ngSanitize', 'ngMessage
                     name = $attrs.name || ($attrs.sdsModel && $attrs.sdsModel.substr($attrs.sdsModel.lastIndexOf('.')+1) || ($attrs.ngModel && $attrs.ngModel.substr($attrs.ngModel.lastIndexOf('.')+1)));
                 }
 
-                console.log(name);
-
                 if(!name){
                     alert('control must have a name via validationFieldName or model(ng/sds)');
                 }
@@ -289,8 +287,6 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'ngSanitize', 'ngMessage
             },
 
             link: function ($scope, $element, $attrs, formField) {
-                var input = $element.find('input');
-                $scope.sdsModelName = $attrs.sdsModel;
                 $scope.container = formField.$scope;
                 $scope.dateFormat = $scope.dateFormat || "MM-dd-yyyy";
 
@@ -380,10 +376,17 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'ngSanitize', 'ngMessage
                         var field = form[$scope.field];
                         return field.$invalid && (form.$submitted || field.$dirty && !$scope.isFocused);
                     }
+                    if ($scope.validationFieldName && form && form[$scope.validationFieldName]){
+                        var field = form[$scope.validationFieldName];
+                        return field.$invalid && (form.$submitted || field.$dirty && !$scope.isFocused);
+                    }
                 };
                 $scope.getError = function (){
                     if ($scope.field && form && form[$scope.field]) {
                         return form[$scope.field].$error;
+                    }
+                    if ($scope.validationFieldName && form && form[$scope.validationFieldName]){
+                        return form[$scope.validationFieldName].$error;
                     }
                 };
                 $scope.interpolate = function (val){
