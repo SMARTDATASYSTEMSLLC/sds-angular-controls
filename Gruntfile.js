@@ -1,5 +1,6 @@
 /*global module:false*/
 module.exports = function(grunt) {
+    "use strict";
 
   // Project configuration.
   grunt.initConfig({
@@ -10,9 +11,9 @@ module.exports = function(grunt) {
     ' * <%= pkg.description %>\n' +
     ' * @version <%= pkg.version %> \n' +
     ' * \n' +
-    ' * Copyright (c) <%= grunt.template.today("yyyy") %> <%= _.pluck(pkg.authors, "name").join(", ") %> \n' +
+    ' * Copyright (c) <%= grunt.template.today("yyyy") %> <%= _.map(pkg.authors, "name").join(", ") %> \n' +
     ' * @link <%= pkg.homepage %> \n' +
-    ' * @license  <%= _.pluck(pkg.licenses, "type").join(", ") %> \n' +
+    ' * @license  <%= _.map(pkg.licenses, "type").join(", ") %> \n' +
     ' */ \n',
     // Task configuration.
     concat: {
@@ -77,25 +78,16 @@ module.exports = function(grunt) {
       }
     },
     jshint: {
-      options: {
-        curly: true,
-        eqeqeq: true,
-        immed: true,
-        latedef: true,
-        newcap: true,
-        noarg: true,
-        sub: true,
-        undef: true,
-        unused: true,
-        boss: true,
-        eqnull: true,
-        globals: {
-          jQuery: true
+        options: {
+            jshintrc: '.jshintrc',
+            reporter: require('jshint-stylish')
+        },
+        all: {
+            src: [
+                'Gruntfile.js',
+                'src/**/*.js'
+            ]
         }
-      },
-      gruntfile: {
-        src: 'Gruntfile.js'
-      }
     },
       connect: {
           options: {
@@ -107,17 +99,18 @@ module.exports = function(grunt) {
           dev: {
               options: {
                   middleware: function (connect) {
+                      var serveStatic = require('serve-static');
                       return [
-                          connect.static('.tmp'),
+                          serveStatic('.tmp'),
                           connect().use(
                               '/bower_components',
-                              connect.static('./bower_components')
+                              serveStatic('./bower_components')
                           ),
                           connect().use(
                               '/dist',
-                              connect.static('./dist')
+                              serveStatic('./dist')
                           ),
-                          connect.static('demo')
+                          serveStatic('demo')
                       ];
                   }
               }

@@ -51,12 +51,13 @@
 
                 //validation ie. on submit
                 $scope.showError = function(){
+                    var field;
                     if ($scope.field && form && form[$scope.field]){
-                        var field = form[$scope.field];
+                        field = form[$scope.field];
                         return field.$invalid && (form.$submitted || field.$dirty && !$scope.isFocused);
                     }
                     if ($scope.validationFieldName && form && form[$scope.validationFieldName]){
-                        var field = form[$scope.validationFieldName];
+                        field = form[$scope.validationFieldName];
                         return field.$invalid && (form.$submitted || field.$dirty && !$scope.isFocused);
                     }
                 };
@@ -73,7 +74,7 @@
                 };
             }
 
-        }
+        };
     }
 
     angular.module('sds-angular-controls').directive('formField', formField);

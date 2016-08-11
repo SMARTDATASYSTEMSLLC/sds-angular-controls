@@ -1,7 +1,7 @@
 /*! 
  * sds-angular-controls
  * Angular Directives used with sds-angular generator
- * @version 1.4.4 
+ * @version 1.4.5 
  * 
  * Copyright (c) 2016 Steve Gentile, David Benson 
  * @link https://github.com/SMARTDATASYSTEMSLLC/sds-angular-controls 
@@ -77,14 +77,15 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'ngSanitize', 'ngMessage
 (function (){
     'use strict';
 
-    function unsafe ($sce) { return $sce.trustAsHtml; }
     unsafe.$inject = ["$sce"];
+    function unsafe ($sce) { return $sce.trustAsHtml; }
 
     angular.module('sds-angular-controls').filter('unsafe', unsafe);
 })();
 
 (function () {
     'use strict';
+    formButton.$inject = ["$q"];
     function formButton ($q) {
         return{
             restrict: 'E',
@@ -108,19 +109,19 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'ngSanitize', 'ngMessage
                     }, function (){
                         $scope.isDisabled = '';
                     });
-                }
+                };
             }
-        }
+        };
     }
-    formButton.$inject = ["$q"];
 
-    angular.module('sds-angular-controls').directive('formButton', formButton)
+    angular.module('sds-angular-controls').directive('formButton', formButton);
 
 })();
 
 
 (function () {
     'use strict';
+    formControl.$inject = ["$injector", "$compile", "formControlFormatters", "_"];
     function formControl ($injector, $compile, formControlFormatters, _) {
         return{
             restrict: 'A',
@@ -147,7 +148,7 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'ngSanitize', 'ngMessage
                 }
 
                 if(!name){
-                    alert('control must have a name via validationFieldName or model(ng/sds)');
+                    throw Error('control must have a name via validationFieldName or model(ng/sds)');
                 }
 
                 $element.attr('name', name);
@@ -187,15 +188,17 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'ngSanitize', 'ngMessage
                 // handle custom formatters for disabled controls
                 var formatter = null;
                 for (var k in formControlFormatters){
-                    var tag = k.split(/\[\]/g);
+                    if (formControlFormatters.hasOwnProperty(k)) {
+                        var tag = k.split(/\[\]/g);
 
-                    if ($element[0].tagName === tag[0] && (!tag[1] || $element.attr(tag[1]) !== undefined)){
-                        formatter = formControlFormatters[k];
+                        if ($element[0].tagName === tag[0] && (!tag[1] || $element.attr(tag[1]) !== undefined)) {
+                            formatter = formControlFormatters[k];
+                        }
                     }
                 }
 
                 if (!formatter) {
-                    formatter = /*@ngInject*/["ngModel", function (ngModel){ return function (){ return ngModel(); }}];
+                    formatter = /*@ngInject*/["ngModel", function (ngModel){ return function (){ return ngModel(); };}];
                 }
                 var getModel = function (obj, key){
                     var arr = key.split(".");
@@ -207,9 +210,8 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'ngSanitize', 'ngMessage
 
                 $compile($element)($scope);
             }
-        }
+        };
     }
-    formControl.$inject = ["$injector", "$compile", "formControlFormatters", "_"];
 
     var formControlFormatters = {
         'select[ng-options]': /*@ngInject*/["ngModel", "$attrs", "$parse", "$scope", function (ngModel, $attrs, $parse, $scope){
@@ -259,12 +261,13 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'ngSanitize', 'ngMessage
 
     angular.module('sds-angular-controls')
         .directive('formControl', formControl)
-        .constant('formControlFormatters', formControlFormatters)
+        .constant('formControlFormatters', formControlFormatters);
 
 })();
 
 (function () {
     'use strict';
+    formDatePicker.$inject = ["moment"];
     function formDatePicker (moment) {
         return{
             restrict: 'EA',
@@ -311,9 +314,8 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'ngSanitize', 'ngMessage
                     formField.$scope.min = moment.utc($scope.min).format($scope.dateFormat.toUpperCase());
                 }
             }
-        }
+        };
     }
-    formDatePicker.$inject = ["moment"];
 
 
     angular.module('sds-angular-controls').directive('formDatePicker', formDatePicker);
@@ -321,6 +323,7 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'ngSanitize', 'ngMessage
 
 (function () {
     'use strict';
+    formField.$inject = ["$interpolate"];
     function formField ($interpolate) {
         return{
             restrict: 'EA',
@@ -372,12 +375,13 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'ngSanitize', 'ngMessage
 
                 //validation ie. on submit
                 $scope.showError = function(){
+                    var field;
                     if ($scope.field && form && form[$scope.field]){
-                        var field = form[$scope.field];
+                        field = form[$scope.field];
                         return field.$invalid && (form.$submitted || field.$dirty && !$scope.isFocused);
                     }
                     if ($scope.validationFieldName && form && form[$scope.validationFieldName]){
-                        var field = form[$scope.validationFieldName];
+                        field = form[$scope.validationFieldName];
                         return field.$invalid && (form.$submitted || field.$dirty && !$scope.isFocused);
                     }
                 };
@@ -394,16 +398,16 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'ngSanitize', 'ngMessage
                 };
             }
 
-        }
+        };
     }
-    formField.$inject = ["$interpolate"];
 
     angular.module('sds-angular-controls').directive('formField', formField);
 })();
 
 (function(){
     'use strict';
-    function formUnsaved ($location, $modal, progressLoader) {
+    formUnsaved.$inject = ["$location", "$uibModal", "progressLoader"];
+    function formUnsaved ($location, $uibModal, progressLoader) {
         return {
             restrict: 'A',
             require: '^form',
@@ -414,7 +418,7 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'ngSanitize', 'ngMessage
                         event.preventDefault();
                         var targetPath = $location.path();
 
-                        $modal.open({
+                        $uibModal.open({
                             templateUrl: 'sds-angular-controls/form-directives/form-unsaved-modal.html',
                             scope: $scope
                         }).result.then(function(result){
@@ -428,9 +432,8 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'ngSanitize', 'ngMessage
 
                 $scope.$on('$routeChangeStart', routeChange);
             }
-        }
+        };
     }
-    formUnsaved.$inject = ["$location", "$modal", "progressLoader"];
 
     angular.module('sds-angular-controls').directive('formUnsaved', formUnsaved);
 })();
@@ -438,6 +441,7 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'ngSanitize', 'ngMessage
 (function (){
     'use strict';
 
+    progressLoader.$inject = ["$q", "$rootScope", "$location"];
     function progressLoader($q, $rootScope, $location) {
         var active = 0;
         var notice = null;
@@ -536,7 +540,6 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'ngSanitize', 'ngMessage
             }
         };
     }
-    progressLoader.$inject = ["$q", "$rootScope", "$location"];
 
     angular.module('sds-angular-controls').factory('progressLoader',progressLoader);
 
@@ -546,12 +549,12 @@ angular.module('sds-angular-controls').run(['$templateCache', function($template
   'use strict';
 
   $templateCache.put('sds-angular-controls/form-directives/form-field-validation.html',
-    "<div ng-if=\"!hideValidationMessage\" class=\"has-error\" ng-show=\"showError()\" ng-messages=\"getError()\"> <span class=\"control-label\" ng-message=\"required\"> {{ validationFieldLabel || label || (field | labelCase) }} is required. </span> <span class=\"control-label\" ng-message=\"text\"> {{ validationFieldLabel || label || (field | labelCase) }} should be text. </span> <span class=\"control-label\" ng-message=\"integer\"> {{ validationFieldLabel || label || (field | labelCase) }} should be an integer. </span> <span class=\"control-label\" ng-message=\"email\"> {{ validationFieldLabel || label || (field | labelCase) }} should be an email address. </span> <span class=\"control-label\" ng-message=\"date\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a date. </span> <span class=\"control-label\" ng-message=\"datetime\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a datetime. </span> <span class=\"control-label\" ng-message=\"time\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a time. </span> <span class=\"control-label\" ng-message=\"month\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a month. </span> <span class=\"control-label\" ng-message=\"week\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a week. </span> <span class=\"control-label\" ng-message=\"url\"> {{ validationFieldLabel || label || (field | labelCase) }} should be an url. </span> <span class=\"control-label\" ng-message=\"zip\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a valid zipcode. </span> <span class=\"control-label\" ng-message=\"number\"> {{ validationFieldLabel || label || (field | labelCase) }} must be a number</span> <span class=\"control-label\" ng-message=\"tel\"> {{ validationFieldLabel || label || (field | labelCase) }} must be a phone number</span> <span ng-if=\"tel === true\" class=\"control-label\" ng-message=\"pattern\"> {{ validationFieldLabel || label || (field | labelCase) }} must be a phone number (xxx-xxx-xxxx or (xxx) xxx-xxxx)</span> <span class=\"control-label\" ng-message=\"color\"> {{ validationFieldLabel || label || (field | labelCase) }} must be a color</span> <span class=\"control-label\" ng-message=\"min\"> {{ validationFieldLabel || label || (field | labelCase) }} must be at least {{interpolate(min)}}. </span> <span class=\"control-label\" ng-message=\"max\"> {{ validationFieldLabel || label || (field | labelCase) }} must not exceed {{interpolate(max)}} </span> <span class=\"control-label\" ng-message=\"taMaxText\"> {{ validationFieldLabel || label || (field | labelCase) }} must not exceed {{interpolate(max)}} </span> <span class=\"control-label\" ng-repeat=\"(k, v) in types\" ng-message=\"{{k}}\"> {{ validationFieldLabel || label || (field | labelCase) }}{{v[1]}}</span> </div>"
+    "<div ng-if=\"!hideValidationMessage\" class=\"has-error\" ng-show=\"showError()\" ng-messages=\"getError()\"> <span class=\"control-label\" ng-message=\"required\"> {{ validationFieldLabel || label || (field | labelCase) }} is required. </span> <span class=\"control-label\" ng-message=\"text\"> {{ validationFieldLabel || label || (field | labelCase) }} should be text. </span> <span class=\"control-label\" ng-message=\"integer\"> {{ validationFieldLabel || label || (field | labelCase) }} should be an integer. </span> <span class=\"control-label\" ng-message=\"email\"> {{ validationFieldLabel || label || (field | labelCase) }} should be an email address. </span> <span class=\"control-label\" ng-message=\"date\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a date. </span> <span class=\"control-label\" ng-message=\"datetime\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a datetime. </span> <span class=\"control-label\" ng-message=\"time\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a time. </span> <span class=\"control-label\" ng-message=\"month\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a month. </span> <span class=\"control-label\" ng-message=\"week\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a week. </span> <span class=\"control-label\" ng-message=\"url\"> {{ validationFieldLabel || label || (field | labelCase) }} should be an url. </span> <span class=\"control-label\" ng-message=\"zip\"> {{ validationFieldLabel || label || (field | labelCase) }} should be a valid zipcode. </span> <span class=\"control-label\" ng-message=\"number\"> {{ validationFieldLabel || label || (field | labelCase) }} must be a number</span> <span class=\"control-label\" ng-message=\"tel\"> {{ validationFieldLabel || label || (field | labelCase) }} must be a phone number</span> <span ng-if=\"tel === true\" class=\"control-label\" ng-message=\"pattern\"> {{ validationFieldLabel || label || (field | labelCase) }} must be a phone number (xxx-xxx-xxxx or (xxx) xxx-xxxx)</span> <span class=\"control-label\" ng-message=\"color\"> {{ validationFieldLabel || label || (field | labelCase) }} must be a color</span> <span class=\"control-label\" ng-message=\"min\"> {{ validationFieldLabel || label || (field | labelCase) }} must be at least {{interpolate(min)}}. </span> <span class=\"control-label\" ng-message=\"max\"> {{ validationFieldLabel || label || (field | labelCase) }} must not exceed {{interpolate(max)}} </span> <span class=\"control-label\" ng-message=\"taMaxText\"> {{ validationFieldLabel || label || (field | labelCase) }} must not exceed {{interpolate(max)}} </span> <span class=\"control-label\" ng-repeat=\"(k, v) in types\" ng-message=\"{{k}}\"> {{ validationFieldLabel || label || (field | labelCase) }}{{v[1]}}</span> </div> "
   );
 
 
   $templateCache.put('sds-angular-controls/form-directives/form-field.html',
-    "<div> <div class=\"form-group clearfix\" ng-class=\"{ 'has-error': showError() }\" ng-if=\"layout === 'stacked'\"> <div class=\"{{layoutCss}}\"> <label ng-if=\"showLabel && showMyLabel\" class=\"control-label {{labelCss}}\"> {{ label || (field | labelCase) }} <span ng-if=\"isRequired && !isReadonly\">*</span> <span ng-if=\"showToolTip\"><a href=\"#\" uib-popover=\"{{helpText}}\" popover-trigger=\"mouseenter\"><i class=\"fa fa-question-circle\"></i></a></span> <!--<span ng-if=\"showToolTip\" uib-popover=\"{{helpText}}\" popover-trigger=\"mouseenter\"><i class=\"fa fa-question-circle\"></i></span>--> </label> <div ng-if=\"!valueFormatter || !isReadonly\"><ng-transclude></ng-transclude></div> <input ng-if=\"valueFormatter && isReadonly\" class=\"form-control\" type=\"text\" ng-value=\"valueFormatter()\" name=\"{{field}}\" readonly> <!-- validation --> <div class=\"pull-left\" ng-include=\"'sds-angular-controls/form-directives/form-field-validation.html'\"></div> <div ng-if=\"showHelpText && !showToolTip\" class=\"help-text\"> <i>{{helpText}}</i> </div> </div> </div> <div ng-if=\"layout === 'horizontal'\" class=\"row inline-control\"> <div class=\"form-group clearfix\" ng-class=\"{ 'has-error': showError() }\"> <label ng-if=\"showLabel\" class=\"control-label {{labelCss}}\"> {{ label || (field | labelCase) }} <span ng-if=\"isRequired && !isReadonly\">*</span></label> <div class=\"{{childLayoutCss || 'col-md-6'}}\"> <span ng-if=\"!valueFormatter || !isReadonly\"><ng-transclude></ng-transclude></span> <input ng-if=\"valueFormatter && isReadonly\" class=\"form-control\" type=\"text\" ng-value=\"valueFormatter()\" name=\"{{field}}\" readonly> </div> <!-- validation --> <div ng-if=\"!hideValidationMessage\" ng-show=\"showError()\" class=\"popover validation right alert-danger\" style=\"display:inline-block; top:auto; left:auto; margin-top:-4px; min-width:240px\"> <div class=\"arrow\" style=\"top: 20px\"></div> <div class=\"popover-content\" ng-include=\"'sds-angular-controls/form-directives/form-field-validation.html'\"> </div> </div> </div> </div> <div ng-if=\"layout !== 'stacked' && layout !== 'horizontal'\" ng-class=\"{ 'has-error': showError() }\" class=\"grid-control {{::layoutCss}}\"> <span ng-if=\"!valueFormatter || !isReadonly\"><ng-transclude></ng-transclude></span> <input ng-if=\"valueFormatter && isReadonly\" class=\"form-control\" type=\"text\" ng-value=\"valueFormatter()\" name=\"{{field}}\" readonly> </div> </div>"
+    "<div> <div class=\"form-group clearfix\" ng-class=\"{ 'has-error': showError() }\" ng-if=\"layout === 'stacked'\"> <div class=\"{{layoutCss}}\"> <label ng-if=\"showLabel && showMyLabel\" class=\"control-label {{labelCss}}\"> {{ label || (field | labelCase) }} <span ng-if=\"isRequired && !isReadonly\">*</span> <span ng-if=\"showToolTip\"><a href=\"#\" uib-popover=\"{{helpText}}\" popover-trigger=\"mouseenter\"><i class=\"fa fa-question-circle\"></i></a></span> <!--<span ng-if=\"showToolTip\" uib-popover=\"{{helpText}}\" popover-trigger=\"mouseenter\"><i class=\"fa fa-question-circle\"></i></span>--> </label> <div ng-if=\"!valueFormatter || !isReadonly\"><ng-transclude></ng-transclude></div> <input ng-if=\"valueFormatter && isReadonly\" class=\"form-control\" type=\"text\" ng-value=\"valueFormatter()\" name=\"{{field}}\" readonly> <!-- validation --> <div class=\"pull-left\" ng-include=\"'sds-angular-controls/form-directives/form-field-validation.html'\"></div> <div ng-if=\"showHelpText && !showToolTip\" class=\"help-text\"> <i>{{helpText}}</i> </div> </div> </div> <div ng-if=\"layout === 'horizontal'\" class=\"row inline-control\"> <div class=\"form-group clearfix\" ng-class=\"{ 'has-error': showError() }\"> <label ng-if=\"showLabel\" class=\"control-label {{labelCss}}\"> {{ label || (field | labelCase) }} <span ng-if=\"isRequired && !isReadonly\">*</span></label> <div class=\"{{childLayoutCss || 'col-md-6'}}\"> <span ng-if=\"!valueFormatter || !isReadonly\"><ng-transclude></ng-transclude></span> <input ng-if=\"valueFormatter && isReadonly\" class=\"form-control\" type=\"text\" ng-value=\"valueFormatter()\" name=\"{{field}}\" readonly> </div> <!-- validation --> <div ng-if=\"!hideValidationMessage\" ng-show=\"showError()\" class=\"popover validation right alert-danger\" style=\"display:inline-block; top:auto; left:auto; margin-top:-4px; min-width:240px\"> <div class=\"arrow\" style=\"top: 20px\"></div> <div class=\"popover-content\" ng-include=\"'sds-angular-controls/form-directives/form-field-validation.html'\"> </div> </div> </div> </div> <div ng-if=\"layout !== 'stacked' && layout !== 'horizontal'\" ng-class=\"{ 'has-error': showError() }\" class=\"grid-control {{::layoutCss}}\"> <span ng-if=\"!valueFormatter || !isReadonly\"><ng-transclude></ng-transclude></span> <input ng-if=\"valueFormatter && isReadonly\" class=\"form-control\" type=\"text\" ng-value=\"valueFormatter()\" name=\"{{field}}\" readonly> </div> </div> "
   );
 
 
@@ -562,13 +565,14 @@ angular.module('sds-angular-controls').run(['$templateCache', function($template
 }]);
 
 angular.module('currencyMask', []).directive('currencyMask', function () {
+    "use strict";
     return {
         restrict: 'A',
         require: 'ngModel',
         link: function (scope, element, attrs, ngModelController) {
             // Run formatting on keyup
             var numberWithCommas = function(value, addExtraZero) {
-                if (addExtraZero == undefined) {
+                if (addExtraZero === undefined) {
                     addExtraZero = false;
                 }
                 value = value.toString();
@@ -580,25 +584,25 @@ angular.module('currencyMask', []).directive('currencyMask', function () {
                     parts[1] = parts[1].substring(0, 2);
                 }
                 if (addExtraZero && parts[1] && (parts[1].length === 1)) {
-                    parts[1] = parts[1] + "0"
+                    parts[1] += "0";
                 }
                 return (isNegative? '-' : '') +  parts.join(".");
             };
             var applyFormatting = function() {
                 var value = element.val();
                 var original = value;
-                if (!value || value.length == 0) { return }
+                if (!value || value.length === 0) { return; }
                 value = numberWithCommas(value);
-                if (value != original) {
+                if (value !== original) {
                     element.val(value);
-                    element.triggerHandler('input')
+                    element.triggerHandler('input');
                 }
             };
             element.bind('keyup', function(e) {
                 var keycode = e.keyCode;
                 var isTextInputKey =
                     (keycode > 47 && keycode < 58)   || // number keys
-                    keycode == 32 || keycode == 8    || // spacebar or backspace
+                    keycode === 32 || keycode === 8    || // spacebar or backspace
                     (keycode > 64 && keycode < 91)   || // letter keys
                     (keycode > 95 && keycode < 112)  || // numpad keys
                     (keycode > 185 && keycode < 193) || // ;=,-./` (in order)
@@ -608,7 +612,7 @@ angular.module('currencyMask', []).directive('currencyMask', function () {
                 }
             });
             ngModelController.$parsers.push(function(value) {
-                if (!value || value.length == 0) {
+                if (!value || value.length === 0) {
                     return value;
                 }
                 value = value.toString();
@@ -616,7 +620,7 @@ angular.module('currencyMask', []).directive('currencyMask', function () {
                 return value;
             });
             ngModelController.$formatters.push(function(value) {
-                if (!value || value.length == 0) {
+                if (!value || value.length === 0) {
                     return value;
                 }
                 value = numberWithCommas(value, true);
@@ -625,6 +629,7 @@ angular.module('currencyMask', []).directive('currencyMask', function () {
         }
     };
 });
+
 (function () {
   'use strict';
   function maskInput (){

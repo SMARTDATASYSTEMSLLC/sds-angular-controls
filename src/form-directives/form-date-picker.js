@@ -46,7 +46,7 @@
                     formField.$scope.min = moment.utc($scope.min).format($scope.dateFormat.toUpperCase());
                 }
             }
-        }
+        };
     }
 
 

@@ -1,6 +1,6 @@
 (function(){
     'use strict';
-    function formUnsaved ($location, $modal, progressLoader) {
+    function formUnsaved ($location, $uibModal, progressLoader) {
         return {
             restrict: 'A',
             require: '^form',
@@ -11,7 +11,7 @@
                         event.preventDefault();
                         var targetPath = $location.path();
 
-                        $modal.open({
+                        $uibModal.open({
                             templateUrl: 'sds-angular-controls/form-directives/form-unsaved-modal.html',
                             scope: $scope
                         }).result.then(function(result){
@@ -25,7 +25,7 @@
 
                 $scope.$on('$routeChangeStart', routeChange);
             }
-        }
+        };
     }
 
     angular.module('sds-angular-controls').directive('formUnsaved', formUnsaved);

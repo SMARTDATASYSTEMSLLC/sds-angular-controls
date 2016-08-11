@@ -1,11 +1,12 @@
 angular.module('currencyMask', []).directive('currencyMask', function () {
+    "use strict";
     return {
         restrict: 'A',
         require: 'ngModel',
         link: function (scope, element, attrs, ngModelController) {
             // Run formatting on keyup
             var numberWithCommas = function(value, addExtraZero) {
-                if (addExtraZero == undefined) {
+                if (addExtraZero === undefined) {
                     addExtraZero = false;
                 }
                 value = value.toString();
@@ -17,25 +18,25 @@ angular.module('currencyMask', []).directive('currencyMask', function () {
                     parts[1] = parts[1].substring(0, 2);
                 }
                 if (addExtraZero && parts[1] && (parts[1].length === 1)) {
-                    parts[1] = parts[1] + "0"
+                    parts[1] += "0";
                 }
                 return (isNegative? '-' : '') +  parts.join(".");
             };
             var applyFormatting = function() {
                 var value = element.val();
                 var original = value;
-                if (!value || value.length == 0) { return }
+                if (!value || value.length === 0) { return; }
                 value = numberWithCommas(value);
-                if (value != original) {
+                if (value !== original) {
                     element.val(value);
-                    element.triggerHandler('input')
+                    element.triggerHandler('input');
                 }
             };
             element.bind('keyup', function(e) {
                 var keycode = e.keyCode;
                 var isTextInputKey =
                     (keycode > 47 && keycode < 58)   || // number keys
-                    keycode == 32 || keycode == 8    || // spacebar or backspace
+                    keycode === 32 || keycode === 8    || // spacebar or backspace
                     (keycode > 64 && keycode < 91)   || // letter keys
                     (keycode > 95 && keycode < 112)  || // numpad keys
                     (keycode > 185 && keycode < 193) || // ;=,-./` (in order)
@@ -45,7 +46,7 @@ angular.module('currencyMask', []).directive('currencyMask', function () {
                 }
             });
             ngModelController.$parsers.push(function(value) {
-                if (!value || value.length == 0) {
+                if (!value || value.length === 0) {
                     return value;
                 }
                 value = value.toString();
@@ -53,7 +54,7 @@ angular.module('currencyMask', []).directive('currencyMask', function () {
                 return value;
             });
             ngModelController.$formatters.push(function(value) {
-                if (!value || value.length == 0) {
+                if (!value || value.length === 0) {
                     return value;
                 }
                 value = numberWithCommas(value, true);

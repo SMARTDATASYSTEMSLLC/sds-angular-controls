@@ -27,7 +27,7 @@
                 }
 
                 if(!name){
-                    alert('control must have a name via validationFieldName or model(ng/sds)');
+                    throw Error('control must have a name via validationFieldName or model(ng/sds)');
                 }
 
                 $element.attr('name', name);
@@ -67,15 +67,17 @@
                 // handle custom formatters for disabled controls
                 var formatter = null;
                 for (var k in formControlFormatters){
-                    var tag = k.split(/\[\]/g);
+                    if (formControlFormatters.hasOwnProperty(k)) {
+                        var tag = k.split(/\[\]/g);
 
-                    if ($element[0].tagName === tag[0] && (!tag[1] || $element.attr(tag[1]) !== undefined)){
-                        formatter = formControlFormatters[k];
+                        if ($element[0].tagName === tag[0] && (!tag[1] || $element.attr(tag[1]) !== undefined)) {
+                            formatter = formControlFormatters[k];
+                        }
                     }
                 }
 
                 if (!formatter) {
-                    formatter = /*@ngInject*/function (ngModel){ return function (){ return ngModel(); }};
+                    formatter = /*@ngInject*/function (ngModel){ return function (){ return ngModel(); };};
                 }
                 var getModel = function (obj, key){
                     var arr = key.split(".");
@@ -87,7 +89,7 @@
 
                 $compile($element)($scope);
             }
-        }
+        };
     }
 
     var formControlFormatters = {
@@ -138,6 +140,6 @@
 
     angular.module('sds-angular-controls')
         .directive('formControl', formControl)
-        .constant('formControlFormatters', formControlFormatters)
+        .constant('formControlFormatters', formControlFormatters);
 
 })();

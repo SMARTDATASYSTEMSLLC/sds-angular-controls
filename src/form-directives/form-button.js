@@ -23,11 +23,11 @@
                     }, function (){
                         $scope.isDisabled = '';
                     });
-                }
+                };
             }
-        }
+        };
     }
 
-    angular.module('sds-angular-controls').directive('formButton', formButton)
+    angular.module('sds-angular-controls').directive('formButton', formButton);
 
 })();
