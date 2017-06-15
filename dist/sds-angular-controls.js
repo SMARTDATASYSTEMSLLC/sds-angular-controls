@@ -1,9 +1,9 @@
 /*! 
  * sds-angular-controls
  * Angular Directives used with sds-angular generator
- * @version 1.4.5 
+ * @version 1.4.6 
  * 
- * Copyright (c) 2016 Steve Gentile, David Benson 
+ * Copyright (c) 2017 Steve Gentile, David Benson 
  * @link https://github.com/SMARTDATASYSTEMSLLC/sds-angular-controls 
  * @license  MIT 
  */ 
@@ -285,7 +285,7 @@ angular.module('sds-angular-controls', ['ui.bootstrap', 'ngSanitize', 'ngMessage
 
 
                 return '<span class="input-group"><input type="text" form-control class="datepicker" placeholder="{{placeholder || container.label}}" ' +
-                    'ng-model="$parent.' + $attrs.sdsModel + '" min-date="min" max-date="max" uib-datepicker-popup="{{::dateFormat}}" is-open="isOpened">' +
+                    'ng-model="$parent.' + $attrs.sdsModel + '" datepicker-options="{minDate: min, maxDate:max}" uib-datepicker-popup="{{::dateFormat}}" is-open="isOpened">' +
                     '<span class="input-group-btn"><button type="button" class="btn btn-default" ng-click="open($event)"><i class="glyphicon glyphicon-calendar"></i></button> </span> </span>';
             },
 

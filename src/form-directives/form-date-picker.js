@@ -17,7 +17,7 @@
 
 
                 return '<span class="input-group"><input type="text" form-control class="datepicker" placeholder="{{placeholder || container.label}}" ' +
-                    'ng-model="$parent.' + $attrs.sdsModel + '" min-date="min" max-date="max" uib-datepicker-popup="{{::dateFormat}}" is-open="isOpened">' +
+                    'ng-model="$parent.' + $attrs.sdsModel + '" datepicker-options="{minDate: min, maxDate:max}" uib-datepicker-popup="{{::dateFormat}}" is-open="isOpened">' +
                     '<span class="input-group-btn"><button type="button" class="btn btn-default" ng-click="open($event)"><i class="glyphicon glyphicon-calendar"></i></button> </span> </span>';
             },
 
